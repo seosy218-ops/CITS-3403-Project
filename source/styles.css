@@ -1,4 +1,4 @@
-/* 全局重置 */
+/* Global reset */
 * {
   margin: 0;
   padding: 0;
@@ -14,7 +14,7 @@ body {
   justify-content: center;
 }
 
-/* 登录卡片容器 */
+/* Login card container */
 .login-container {
   width: 100%;
   padding: 20px;
@@ -30,7 +30,7 @@ body {
   margin: 0 auto;
 }
 
-/* 标题 */
+/* Title */
 .login-title {
   font-size: 28px;
   color: #1a1a1a;
@@ -45,7 +45,7 @@ body {
   margin-bottom: 30px;
 }
 
-/* 表单 */
+/* Form */
 .login-form {
   display: flex;
   flex-direction: column;
@@ -82,7 +82,7 @@ body {
   color: #bbbbbb;
 }
 
-/* 记住我 & 忘记密码 */
+/* Remember me & Forgot password */
 .form-options {
   display: flex;
   justify-content: space-between;
@@ -107,7 +107,7 @@ body {
   text-decoration: underline;
 }
 
-/* 登录按钮 */
+/* Login button */
 .login-button {
   padding: 13px;
   background-color: #4a90e2;
@@ -128,7 +128,7 @@ body {
   background-color: #2a6099;
 }
 
-/* 注册链接 */
+/* Register link */
 .register-link {
   text-align: center;
   font-size: 13px;
