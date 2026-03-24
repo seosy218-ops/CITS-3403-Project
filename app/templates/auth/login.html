@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Sign In — TuneFeed{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
+{% endblock %}
+
+{% block full_page %}
+<div class="auth-page">
+  <div class="ts-form-card">
+    <div class="auth-logo">TuneFeed</div>
+    <div class="auth-tagline">Where producers connect &amp; beats get discovered.</div>
+
+    <form class="ts-validate" novalidate>
+      <div class="ts-form-group">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
+      </div>
+
+      <div class="ts-form-group">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••" required />
+      </div>
+
+      <div class="remember-row">
+        <label class="remember-label" for="remember">
+          <input id="remember" name="remember" type="checkbox" /> Remember me
+        </label>
+      </div>
+
+      <button type="submit" class="btn-ts-primary auth-submit-btn">Sign In</button>
+    </form>
+
+    <div class="auth-switch">
+      Don't have an account?
+      <a href="{{ url_for('register') }}" class="auth-switch-link">Join TuneFeed</a>
+    </div>
+
+    <div class="auth-demo">
+      <div class="auth-demo-title">DEMO ACCOUNTS</div>
+      <div class="auth-demo-body">
+        <div class="auth-demo-item"><strong class="auth-demo-role auth-demo-role-listener">Listener:</strong> demo@tunefeed.io / password123</div>
+        <div class="auth-demo-item"><strong class="auth-demo-role auth-demo-role-producer">Producer:</strong> metro@tunefeed.io / password123</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
