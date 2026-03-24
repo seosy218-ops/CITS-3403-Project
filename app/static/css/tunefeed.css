@@ -1,0 +1,91 @@
+:root {
+  --ts-orange: #d97706;
+  --ts-orange-light: #f59e0b;
+  --ts-orange-dim: rgba(217, 119, 6, 0.12);
+  --ts-orange-border: rgba(217, 119, 6, 0.28);
+  --ts-teal: #00d4aa;
+
+  --ts-bg: #0d0d14;
+  --ts-surface: #161622;
+
+  --ts-text-primary: #eeeef8;
+  --ts-text-secondary: #8888aa;
+  --ts-text-muted: #44445a;
+
+  --ts-border: rgba(255, 255, 255, 0.07);
+  --radius-xl: 24px;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "DM Sans", system-ui, -apple-system, sans-serif;
+  background: var(--ts-bg);
+  color: var(--ts-text-primary);
+}
+
+.btn-ts-primary {
+  width: 100%;
+  background: var(--ts-orange);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ts-primary:hover {
+  background: var(--ts-orange-light);
+}
+
+.ts-form-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: var(--radius-xl);
+  padding: 36px 40px;
+  max-width: 460px;
+  width: 100%;
+}
+
+.ts-form-group {
+  margin-bottom: 16px;
+}
+
+.ts-form-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ts-text-secondary);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.ts-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--ts-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--ts-text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.ts-input::placeholder {
+  color: var(--ts-text-muted);
+}
+
+.ts-input:focus {
+  border-color: var(--ts-orange-border);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+  background: rgba(255, 255, 255, 0.07);
+}
