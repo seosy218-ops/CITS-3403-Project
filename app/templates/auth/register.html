@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — TuneFeed{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
+{% endblock %}
+
+{% block full_page %}
+<div class="auth-page">
+  <div class="ts-form-card">
+    <div class="auth-logo">TuneFeed</div>
+    <div class="auth-tagline">Create your profile and start discovering beats.</div>
+
+    <form class="ts-validate" novalidate>
+      <div class="ts-form-group">
+        <label class="form-label" for="username">Username</label>
+        <input id="username" name="username" type="text" class="ts-input" placeholder="producername" required />
+      </div>
+
+      <div class="ts-form-group">
+        <label class="form-label" for="email">Email</label>
+        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
+      </div>
+
+      <div class="ts-form-group">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••" required />
+      </div>
+
+      <div class="ts-form-group">
+        <label class="form-label" for="confirm_password">Confirm Password</label>
+        <input id="confirm_password" name="confirm_password" type="password" class="ts-input" placeholder="••••••••" required />
+      </div>
+
+      <div class="ts-form-group">
+        <label class="form-label" for="account_type">Account Type</label>
+        <select id="account_type" name="account_type" class="ts-input" required>
+          <option value="listener" selected>Listener</option>
+          <option value="producer">Producer</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn-ts-primary auth-submit-btn">Create Account</button>
+    </form>
+
+    <div class="auth-switch">
+      Already have an account?
+      <a href="{{ url_for('login') }}" class="auth-switch-link">Sign In</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

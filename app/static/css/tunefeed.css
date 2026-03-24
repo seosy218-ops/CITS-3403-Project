@@ -89,3 +89,14 @@ body {
   box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
   background: rgba(255, 255, 255, 0.07);
 }
+
+select.ts-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ts-text-secondary) 50%),
+    linear-gradient(135deg, var(--ts-text-secondary) 50%, transparent 50%);
+  background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
