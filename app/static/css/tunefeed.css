@@ -116,52 +116,6 @@ body {
   margin-bottom: 10px;
 }
 
-.market-hero h1 {
-  font-size: 2rem;
-  margin-bottom: 7px;
-}
-
-.market-hero p {
-  color: var(--ts-text-secondary);
-  margin-bottom: 22px;
-}
-
-.market-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 14px;
-}
-
-.market-card {
-  background: var(--ts-surface);
-  border: 1px solid var(--ts-border);
-  border-radius: 14px;
-  padding: 18px;
-}
-
-.market-card h2 {
-  font-size: 1.7rem;
-  margin-bottom: 8px;
-}
-
-.market-card p {
-  color: var(--ts-text-secondary);
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
-.market-card-featured {
-  border-color: var(--ts-orange-border);
-  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.18);
-}
-
-.market-tag {
-  color: var(--ts-orange);
-  font-size: 10px;
-  letter-spacing: 0.07em;
-  margin-bottom: 10px;
-}
-
 /* Reusable primary action button styling. */
 .btn-ts-primary {
   width: 100%;

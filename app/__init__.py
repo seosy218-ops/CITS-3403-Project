@@ -29,10 +29,5 @@ def create_app() -> Flask:
     def discover():
         return render_template("main/discover.html")
 
-    # Display marketplace licenses and featured beat listings.
-    @app.route("/marketplace", methods=["GET"])
-    def marketplace():
-        return render_template("main/marketplace.html")
-
     # Return the configured Flask app instance to the caller.
     return app
