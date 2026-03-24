@@ -3,15 +3,19 @@
 {% block title %}Create Account — TuneFeed{% endblock %}
 
 {% block extra_css %}
+<!-- Shared auth styles reused by registration page. -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
 {% endblock %}
 
 {% block full_page %}
+<!-- Registration page shell centered within the viewport. -->
 <div class="auth-page">
   <div class="ts-form-card">
+    <!-- Product identity and onboarding tagline. -->
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
+    <!-- POST form for collecting initial account details. -->
     <form method="POST" action="{{ url_for('register') }}" class="ts-validate" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
@@ -44,6 +48,7 @@
       <button type="submit" class="btn-ts-primary auth-submit-btn">Create Account</button>
     </form>
 
+    <!-- Return path for existing users. -->
     <div class="auth-switch">
       Already have an account?
       <a href="{{ url_for('login') }}" class="auth-switch-link">Sign In</a>

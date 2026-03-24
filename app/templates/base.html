@@ -1,18 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <!-- Core document metadata and responsive viewport settings. -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}TuneFeed{% endblock %}</title>
 
+  <!-- Shared font loading for consistent typography across pages. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
 
+  <!-- Global stylesheet and page-level style extension block. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tunefeed.css') }}" />
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+  <!-- Primary navigation shared by authentication and discover pages. -->
   <header class="top-nav">
     <a href="{{ url_for('discover') }}" class="brand">TuneFeed</a>
     <nav class="top-nav-links">
@@ -22,6 +26,7 @@
     </nav>
   </header>
 
+  <!-- Main content injection point for child templates. -->
   {% block full_page %}{% endblock %}
 </body>
 </html>

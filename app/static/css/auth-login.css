@@ -1,3 +1,4 @@
+/* Full-page auth layout with centered card and ambient gradient accents. */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -10,6 +11,7 @@
   padding: 40px 20px;
 }
 
+/* Branded heading treatment for TuneFeed logo text. */
 .auth-logo {
   font-size: 2rem;
   font-weight: 800;
@@ -21,6 +23,7 @@
   background-clip: text;
 }
 
+/* Supporting message below the auth logo. */
 .auth-tagline {
   text-align: center;
   color: var(--ts-text-muted);
@@ -28,6 +31,7 @@
   margin-bottom: 28px;
 }
 
+/* Remember-me row alignment and spacing. */
 .remember-row {
   display: flex;
   align-items: center;
@@ -48,6 +52,7 @@
   margin-top: 2px;
 }
 
+/* Secondary account navigation and CTA text block. */
 .auth-switch {
   margin-top: 20px;
   text-align: center;
@@ -55,6 +60,7 @@
   color: var(--ts-text-muted);
 }
 
+/* Compact variant used for secondary navigation prompt. */
 .auth-switch-secondary {
   margin-top: 10px;
   font-size: 12px;
@@ -68,6 +74,7 @@
   color: var(--ts-orange-light);
 }
 
+/* Demo credentials card used for walkthrough/testing scenarios. */
 .auth-demo {
   margin-top: 20px;
   padding: 12px;
@@ -101,6 +108,7 @@
   font-weight: 700;
 }
 
+/* Role-specific color highlights in demo account list. */
 .auth-demo-role-listener {
   color: var(--ts-orange);
 }
