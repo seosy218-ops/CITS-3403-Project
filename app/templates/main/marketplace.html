@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace — TuneFeed{% endblock %}
+
+{% block full_page %}
+<main class="page-shell">
+  <section class="market-hero">
+    <h1>Beat Marketplace</h1>
+    <p>Browse licenses and compare options before purchasing instrumentals.</p>
+  </section>
+
+  <section class="market-grid">
+    <article class="market-card">
+      <div class="market-tag">BASIC LICENSE</div>
+      <h2>$29</h2>
+      <p>MP3 delivery, non-exclusive rights, up to 50,000 streams.</p>
+      <a class="btn-ts-primary" href="{{ url_for('discover') }}">Browse Beats</a>
+    </article>
+
+    <article class="market-card market-card-featured">
+      <div class="market-tag">PREMIUM LICENSE</div>
+      <h2>$79</h2>
+      <p>WAV + stems, expanded rights, up to 500,000 streams.</p>
+      <a class="btn-ts-primary" href="{{ url_for('discover') }}">Browse Beats</a>
+    </article>
+
+    <article class="market-card">
+      <div class="market-tag">UNLIMITED LICENSE</div>
+      <h2>$149</h2>
+      <p>Full quality exports, broad usage terms, unlimited streams.</p>
+      <a class="btn-ts-primary" href="{{ url_for('discover') }}">Browse Beats</a>
+    </article>
+  </section>
+</main>
+{% endblock %}
