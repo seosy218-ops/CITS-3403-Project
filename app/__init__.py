@@ -14,7 +14,7 @@ def create_app() -> Flask:
     @app.route("/login", methods=["GET", "POST"])
     def login():
         if request.method == "POST":
-            return redirect(url_for("discover"))
+            return redirect(url_for("feed"))
         return render_template("auth/login.html")
 
     # Render the registration page and route back to sign-in on submit.
@@ -28,6 +28,11 @@ def create_app() -> Flask:
     @app.route("/discover", methods=["GET"])
     def discover():
         return render_template("main/discover.html")
+
+    # Display the listen feed layout (visual baseline only).
+    @app.route("/feed", methods=["GET"])
+    def feed():
+        return render_template("main/feed.html")
 
     # Return the configured Flask app instance to the caller.
     return app

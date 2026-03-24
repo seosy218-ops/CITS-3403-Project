@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
   <!-- Global stylesheet and page-level style extension block. -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tunefeed.css') }}" />
@@ -20,6 +21,7 @@
   <header class="top-nav">
     <a href="{{ url_for('discover') }}" class="brand">TuneFeed</a>
     <nav class="top-nav-links">
+      <a href="{{ url_for('feed') }}">Listen</a>
       <a href="{{ url_for('discover') }}">Discover</a>
       <a href="{{ url_for('login') }}">Sign In</a>
       <a href="{{ url_for('register') }}">Join</a>
