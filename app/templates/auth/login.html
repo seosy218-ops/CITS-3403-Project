@@ -10,13 +10,13 @@
 {% block full_page %}
 <!-- Centered auth container for the login experience. -->
 <div class="auth-page">
-  <div class="ts-form-card">
+  <div class="ts-form-card shadow-sm">
     <!-- Brand heading and short product message. -->
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Where producers connect &amp; beats get discovered.</div>
 
     <!-- POST form used for demo login flow into Discover. -->
-    <form method="POST" action="{{ url_for('login') }}" class="ts-validate" novalidate>
+    <form method="POST" action="{{ url_for('login') }}" class="ts-validate needs-validation" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
         <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
@@ -33,7 +33,7 @@
         </label>
       </div>
 
-      <button type="submit" class="btn-ts-primary auth-submit-btn">Sign In</button>
+      <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Sign In</button>
     </form>
 
     <!-- Primary path to registration for new users. -->

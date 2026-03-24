@@ -10,13 +10,13 @@
 {% block full_page %}
 <!-- Registration page shell centered within the viewport. -->
 <div class="auth-page">
-  <div class="ts-form-card">
+  <div class="ts-form-card shadow-sm">
     <!-- Product identity and onboarding tagline. -->
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
     <!-- POST form for collecting initial account details. -->
-    <form method="POST" action="{{ url_for('register') }}" class="ts-validate" novalidate>
+    <form method="POST" action="{{ url_for('register') }}" class="ts-validate needs-validation" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
         <input id="username" name="username" type="text" class="ts-input" placeholder="producername" required />
@@ -45,7 +45,7 @@
         </select>
       </div>
 
-      <button type="submit" class="btn-ts-primary auth-submit-btn">Create Account</button>
+      <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Create Account</button>
     </form>
 
     <!-- Return path for existing users. -->
