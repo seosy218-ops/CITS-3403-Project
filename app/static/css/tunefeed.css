@@ -28,6 +28,85 @@ body {
   color: var(--ts-text-primary);
 }
 
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  border-bottom: 1px solid var(--ts-border);
+  background: rgba(22, 22, 34, 0.92);
+}
+
+.brand {
+  color: var(--ts-text-primary);
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.top-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.top-nav-links a {
+  color: var(--ts-text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.top-nav-links a:hover {
+  color: var(--ts-orange-light);
+}
+
+.page-shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 30px 20px 60px;
+}
+
+.discover-hero h1 {
+  font-size: 2rem;
+  margin-bottom: 7px;
+}
+
+.discover-hero p {
+  color: var(--ts-text-secondary);
+  margin-bottom: 22px;
+}
+
+.discover-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+}
+
+.discover-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.discover-card h2 {
+  font-size: 1.2rem;
+  margin-bottom: 5px;
+}
+
+.discover-card p {
+  color: var(--ts-text-secondary);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.discover-tag {
+  color: var(--ts-orange);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  margin-bottom: 10px;
+}
+
 .btn-ts-primary {
   width: 100%;
   background: var(--ts-orange);

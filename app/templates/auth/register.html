@@ -12,7 +12,7 @@
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
-    <form class="ts-validate" novalidate>
+    <form method="POST" action="{{ url_for('register') }}" class="ts-validate" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
         <input id="username" name="username" type="text" class="ts-input" placeholder="producername" required />

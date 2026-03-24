@@ -13,6 +13,15 @@
   {% block extra_css %}{% endblock %}
 </head>
 <body>
+  <header class="top-nav">
+    <a href="{{ url_for('discover') }}" class="brand">TuneFeed</a>
+    <nav class="top-nav-links">
+      <a href="{{ url_for('discover') }}">Discover</a>
+      <a href="{{ url_for('login') }}">Sign In</a>
+      <a href="{{ url_for('register') }}">Join</a>
+    </nav>
+  </header>
+
   {% block full_page %}{% endblock %}
 </body>
 </html>

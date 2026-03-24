@@ -55,6 +55,11 @@
   color: var(--ts-text-muted);
 }
 
+.auth-switch-secondary {
+  margin-top: 10px;
+  font-size: 12px;
+}
+
 .auth-switch-link {
   color: var(--ts-orange);
 }
