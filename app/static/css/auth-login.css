@@ -31,6 +31,127 @@
   margin-bottom: 28px;
 }
 
+/* ── Flash alert messages ── */
+.auth-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.auth-alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.auth-alert-success {
+  background: rgba(0, 212, 170, 0.1);
+  border: 1px solid rgba(0, 212, 170, 0.25);
+  color: var(--ts-teal);
+}
+
+.auth-alert-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 0 0 12px;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.auth-alert-close:hover {
+  opacity: 1;
+}
+
+/* ── Form validation feedback ── */
+.was-validated .ts-input:invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.was-validated .ts-input:valid {
+  border-color: var(--ts-teal);
+  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
+}
+
+.invalid-feedback {
+  display: none;
+  font-size: 11px;
+  color: #f87171;
+  margin-top: 6px;
+}
+
+.was-validated .ts-input:invalid ~ .invalid-feedback,
+.was-validated .password-wrapper:has(.ts-input:invalid) ~ .invalid-feedback {
+  display: block;
+}
+
+/* ── Password visibility toggle ── */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .ts-input {
+  padding-right: 42px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ts-text-muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.password-toggle:hover {
+  color: var(--ts-text-secondary);
+}
+
+/* ── Custom checkbox ── */
+.auth-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--ts-border);
+  background: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+  vertical-align: middle;
+  position: relative;
+  transition: all 0.15s;
+}
+
+.auth-checkbox:checked {
+  background: var(--ts-orange);
+  border-color: var(--ts-orange);
+}
+
+.auth-checkbox:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1.5px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
 /* Remember-me row alignment and spacing. */
 .remember-row {
   display: flex;
@@ -74,7 +195,7 @@
   color: var(--ts-orange-light);
 }
 
-/* Demo credentials card used for walkthrough/testing scenarios. */
+/* ── Demo credentials card ── */
 .auth-demo {
   margin-top: 20px;
   padding: 12px;
@@ -91,17 +212,59 @@
   margin-bottom: 8px;
 }
 
+.auth-demo-hint {
+  font-weight: 400;
+  opacity: 0.6;
+  font-style: italic;
+  letter-spacing: normal;
+}
+
 .auth-demo-body {
   font-size: 11px;
   color: var(--ts-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.auth-demo-item {
+/* Clickable demo credential buttons */
+.auth-demo-fill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--ts-text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
   line-height: 1.4;
 }
 
-.auth-demo-item + .auth-demo-item {
-  margin-top: 6px;
+.auth-demo-fill:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--ts-border);
+}
+
+.auth-demo-icon {
+  margin-left: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-size: 12px;
+}
+
+.auth-demo-fill:hover .auth-demo-icon {
+  opacity: 0.6;
+}
+
+.auth-demo-filled {
+  background: var(--ts-orange-dim) !important;
+  border-color: var(--ts-orange-border) !important;
 }
 
 .auth-demo-role {
@@ -115,4 +278,24 @@
 
 .auth-demo-role-producer {
   color: var(--ts-teal);
+}
+
+/* ── Mobile responsiveness ── */
+@media (max-width: 480px) {
+  .auth-page {
+    padding: 24px 12px;
+  }
+
+  .ts-form-card {
+    padding: 28px 22px;
+    border-radius: 16px;
+  }
+
+  .auth-logo {
+    font-size: 1.6rem;
+  }
+
+  .auth-demo {
+    padding: 10px;
+  }
 }
