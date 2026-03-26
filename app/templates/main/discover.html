@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Discover — TuneFeed{% endblock %}
+
+{% block full_page %}
+<!-- Main discover workspace containing hero copy and sample producer cards. -->
+<main class="page-shell container">
+  <!-- Introductory section framing the purpose of the discover page. -->
+  <section class="discover-hero">
+    <h1>Discover New Producers</h1>
+    <p>Explore trending beats, fresh uploads, and upcoming creators.</p>
+  </section>
+
+  <!-- Demo card grid representing sample producer/beat entries. -->
+  <section class="discover-grid row g-3">
+    <article class="discover-card col">
+      <div class="discover-tag">TRENDING</div>
+      <h2>Metro Nova</h2>
+      <p>Dark trap melodies and polished drum textures.</p>
+      <button class="btn-ts-primary">View Profile</button>
+    </article>
+
+    <article class="discover-card col">
+      <div class="discover-tag">NEW DROP</div>
+      <h2>Cloud Harbor</h2>
+      <p>Lo-fi and chillhop instrumentals for late-night writing sessions.</p>
+      <button class="btn-ts-primary">View Profile</button>
+    </article>
+
+    <article class="discover-card col">
+      <div class="discover-tag">RISING</div>
+      <h2>Echo Frame</h2>
+      <p>Drill-ready percussion with cinematic low-end design.</p>
+      <button class="btn-ts-primary">View Profile</button>
+    </article>
+  </section>
+</main>
+{% endblock %}

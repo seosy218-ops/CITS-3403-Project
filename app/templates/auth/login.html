@@ -3,16 +3,20 @@
 {% block title %}Sign In — TuneFeed{% endblock %}
 
 {% block extra_css %}
+<!-- Authentication-specific styling layer. -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
 {% endblock %}
 
 {% block full_page %}
+<!-- Centered auth container for the login experience. -->
 <div class="auth-page">
-  <div class="ts-form-card">
+  <div class="ts-form-card shadow-sm">
+    <!-- Brand heading and short product message. -->
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Where producers connect &amp; beats get discovered.</div>
 
-    <form class="ts-validate" novalidate>
+    <!-- POST form used for demo login flow into Discover. -->
+    <form method="POST" action="{{ url_for('login') }}" class="ts-validate needs-validation" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
         <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
@@ -29,14 +33,22 @@
         </label>
       </div>
 
-      <button type="submit" class="btn-ts-primary auth-submit-btn">Sign In</button>
+      <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Sign In</button>
     </form>
 
+    <!-- Primary path to registration for new users. -->
     <div class="auth-switch">
       Don't have an account?
       <a href="{{ url_for('register') }}" class="auth-switch-link">Join TuneFeed</a>
     </div>
 
+    <!-- Secondary shortcut to preview the app without signing in. -->
+    <div class="auth-switch auth-switch-secondary">
+      Want to preview the app first?
+      <a href="{{ url_for('discover') }}" class="auth-switch-link">Open Discover</a>
+    </div>
+
+    <!-- Demo credentials for presentation and manual testing flows. -->
     <div class="auth-demo">
       <div class="auth-demo-title">DEMO ACCOUNTS</div>
       <div class="auth-demo-body">
