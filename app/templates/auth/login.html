@@ -3,59 +3,85 @@
 {% block title %}Sign In — TuneFeed{% endblock %}
 
 {% block extra_css %}
-<!-- Authentication-specific styling layer. -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
 {% endblock %}
 
 {% block full_page %}
-<!-- Centered auth container for the login experience. -->
 <div class="auth-page">
   <div class="ts-form-card shadow-sm">
-    <!-- Brand heading and short product message. -->
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Where producers connect &amp; beats get discovered.</div>
 
-    <!-- POST form used for demo login flow into Discover. -->
-    <form method="POST" action="{{ url_for('login') }}" class="ts-validate needs-validation" novalidate>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="auth-alert auth-alert-{{ category }}" role="alert">
+          {{ message }}
+          <button type="button" class="auth-alert-close" aria-label="Close">&times;</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('login') }}" class="ts-validate needs-validation" novalidate
+          role="form" aria-label="Sign in to TuneFeed">
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
-        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
+        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
+               required autofocus aria-required="true" aria-describedby="email-feedback" />
+        <div class="invalid-feedback" id="email-feedback">Please enter a valid email address.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="password">Password</label>
-        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••" required />
+        <div class="password-wrapper">
+          <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••"
+                 required aria-required="true" aria-describedby="password-feedback" />
+          <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div class="invalid-feedback" id="password-feedback">Password is required.</div>
       </div>
 
       <div class="remember-row">
         <label class="remember-label" for="remember">
-          <input id="remember" name="remember" type="checkbox" /> Remember me
+          <input id="remember" name="remember" type="checkbox" class="auth-checkbox" /> Remember me
         </label>
       </div>
 
       <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Sign In</button>
     </form>
 
-    <!-- Primary path to registration for new users. -->
     <div class="auth-switch">
       Don't have an account?
       <a href="{{ url_for('register') }}" class="auth-switch-link">Join TuneFeed</a>
     </div>
 
-    <!-- Secondary shortcut to preview the app without signing in. -->
     <div class="auth-switch auth-switch-secondary">
       Want to preview the app first?
       <a href="{{ url_for('discover') }}" class="auth-switch-link">Open Discover</a>
     </div>
 
-    <!-- Demo credentials for presentation and manual testing flows. -->
     <div class="auth-demo">
-      <div class="auth-demo-title">DEMO ACCOUNTS</div>
+      <div class="auth-demo-title">DEMO ACCOUNTS <span class="auth-demo-hint">click to fill</span></div>
       <div class="auth-demo-body">
-        <div class="auth-demo-item"><strong class="auth-demo-role auth-demo-role-listener">Listener:</strong> demo@tunefeed.io / password123</div>
-        <div class="auth-demo-item"><strong class="auth-demo-role auth-demo-role-producer">Producer:</strong> metro@tunefeed.io / password123</div>
+        <button type="button" class="auth-demo-item auth-demo-fill"
+                data-email="demo@tunefeed.io" data-password="password123">
+          <strong class="auth-demo-role auth-demo-role-listener">Listener</strong>
+          demo@tunefeed.io
+          <i class="bi bi-box-arrow-in-right auth-demo-icon"></i>
+        </button>
+        <button type="button" class="auth-demo-item auth-demo-fill"
+                data-email="metro@tunefeed.io" data-password="password123">
+          <strong class="auth-demo-role auth-demo-role-producer">Producer</strong>
+          metro@tunefeed.io
+          <i class="bi bi-box-arrow-in-right auth-demo-icon"></i>
+        </button>
       </div>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-login.js') }}"></script>
 {% endblock %}
