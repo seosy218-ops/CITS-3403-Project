@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}TuneFeed — Find Your Sound{% endblock %}
+
+{% block full_page %}
+
+<section class="home-hero">
+  <div class="home-hero-inner">
+    <div class="home-tag-line"><i class="bi bi-vinyl"></i> Beat Marketplace</div>
+    <h1 class="home-headline">Find your sound.<br>Sell your work.</h1>
+    <p class="home-sub">
+      TuneFeed connects producers with listeners through a fast, scroll-driven beat feed —
+      no algorithms, just music.
+    </p>
+    <div class="home-cta-row">
+      <a href="{{ url_for('main.feed') }}" class="btn-ts-primary home-cta-btn">
+        <i class="bi bi-play-fill"></i> Open the Feed
+      </a>
+      <a href="{{ url_for('main.register') }}" class="btn-ts-outline home-cta-btn">
+        <i class="bi bi-person-plus"></i> Join Free
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="page-shell container">
+
+  <section class="home-how">
+    <p class="home-section-label">How it works</p>
+    <div class="home-steps-grid">
+      <div class="home-step">
+        <div class="home-step-num">01</div>
+        <h3>Scroll the feed</h3>
+        <p>Browse beats the way you browse content — fast and visual, no friction.</p>
+      </div>
+      <div class="home-step">
+        <div class="home-step-num">02</div>
+        <h3>Like and follow</h3>
+        <p>Save producers you love. Your library builds itself as you listen.</p>
+      </div>
+      <div class="home-step">
+        <div class="home-step-num">03</div>
+        <h3>License instantly</h3>
+        <p>Buy a lease or exclusive licence direct from the producer. No middleman.</p>
+      </div>
+    </div>
+  </section>
+
+  {% if beats %}
+  <section class="home-beats-section">
+    <div class="home-section-header">
+      <p class="home-section-label" style="margin-bottom:0;">Trending beats</p>
+      <a href="{{ url_for('main.discover') }}" class="home-see-all">
+        See all <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="beat-list">
+      {% for beat in beats %}
+      <div class="beat-row">
+        <div class="beat-row-index">{{ loop.index }}</div>
+        <div class="beat-row-info">
+          <div class="beat-row-title">
+            <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}">{{ beat.title }}</a>
+          </div>
+          <div class="beat-row-meta">
+            <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="beat-producer-link">
+              {{ beat.producer.username }}
+            </a>
+            {% if beat.genre %}<span class="beat-tag">{{ beat.genre }}</span>{% endif %}
+            {% if beat.bpm %}<span class="beat-tag">{{ beat.bpm }} BPM</span>{% endif %}
+            {% if beat.key %}<span class="beat-tag">{{ beat.key }}</span>{% endif %}
+          </div>
+        </div>
+        <div class="beat-row-right">
+          <span class="beat-play-count"><i class="bi bi-play"></i> {{ beat.play_count }}</span>
+          <span class="beat-price">${{ "%.2f"|format(beat.price) }}</span>
+          <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="btn-ts-icon-sm">
+            <i class="bi bi-arrow-right"></i>
+          </a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {% if producers %}
+  <section class="home-producers-section">
+    <div class="home-section-header">
+      <p class="home-section-label" style="margin-bottom:0;">Producers to watch</p>
+      <a href="{{ url_for('main.discover') }}" class="home-see-all">
+        View all <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    <div class="producer-chip-list">
+      {% for p in producers %}
+      <a href="{{ url_for('main.profile', user_id=p.id) }}" class="producer-chip">
+        <div class="producer-chip-avatar">{{ p.username[0].upper() }}</div>
+        <div>
+          <div class="producer-chip-name">{{ p.username }}</div>
+          <div class="producer-chip-meta">{{ p.beats.count() }} beats</div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+</div>
+
+<section class="home-join-banner">
+  <div class="home-join-inner">
+    <h2>Ready to start?</h2>
+    <p>Join producers and listeners already building their sound on TuneFeed.</p>
+    <a href="{{ url_for('main.register') }}" class="btn-ts-primary home-cta-btn">
+      Create your account
+    </a>
+  </div>
+</section>
+
+{% endblock %}
