@@ -1,38 +1,100 @@
 {% extends "base.html" %}
-
 {% block title %}Discover — TuneFeed{% endblock %}
 
 {% block full_page %}
-<!-- Main discover workspace containing hero copy and sample producer cards. -->
-<main class="page-shell container">
-  <!-- Introductory section framing the purpose of the discover page. -->
-  <section class="discover-hero">
-    <h1>Discover New Producers</h1>
-    <p>Explore trending beats, fresh uploads, and upcoming creators.</p>
-  </section>
+<div class="page-shell container">
 
-  <!-- Demo card grid representing sample producer/beat entries. -->
-  <section class="discover-grid row g-3">
-    <article class="discover-card col">
-      <div class="discover-tag">TRENDING</div>
-      <h2>Metro Nova</h2>
-      <p>Dark trap melodies and polished drum textures.</p>
-      <button class="btn-ts-primary">View Profile</button>
-    </article>
+  <div class="discover-header">
+    <h1>Discover</h1>
+    <p>Browse beats from independent producers.</p>
+  </div>
 
-    <article class="discover-card col">
-      <div class="discover-tag">NEW DROP</div>
-      <h2>Cloud Harbor</h2>
-      <p>Lo-fi and chillhop instrumentals for late-night writing sessions.</p>
-      <button class="btn-ts-primary">View Profile</button>
-    </article>
+  {% if genres %}
+  <div class="genre-tabs">
+    <a href="{{ url_for('main.discover', sort=sort) }}"
+       class="genre-tab {{ 'active' if not active_genre }}">All</a>
+    {% for genre in genres %}
+    <a href="{{ url_for('main.discover', genre=genre, sort=sort) }}"
+       class="genre-tab {{ 'active' if active_genre == genre }}">{{ genre }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 
-    <article class="discover-card col">
-      <div class="discover-tag">RISING</div>
-      <h2>Echo Frame</h2>
-      <p>Drill-ready percussion with cinematic low-end design.</p>
-      <button class="btn-ts-primary">View Profile</button>
-    </article>
-  </section>
-</main>
+  <div class="discover-controls">
+    <span class="result-count">{{ beats|length }} beat{{ 's' if beats|length != 1 }}</span>
+    <div class="sort-tabs">
+      <a href="{{ url_for('main.discover', genre=active_genre, sort='new') }}"
+         class="sort-tab {{ 'active' if sort != 'popular' }}">New</a>
+      <a href="{{ url_for('main.discover', genre=active_genre, sort='popular') }}"
+         class="sort-tab {{ 'active' if sort == 'popular' }}">Popular</a>
+    </div>
+  </div>
+
+  {% if beats %}
+  <div class="beat-list">
+    {% for beat in beats %}
+    <div class="beat-row">
+      <div class="beat-row-index">{{ loop.index }}</div>
+      <div class="beat-row-info">
+        <div class="beat-row-title">
+          <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}">{{ beat.title }}</a>
+        </div>
+        <div class="beat-row-meta">
+          <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="beat-producer-link">
+            {{ beat.producer.username }}
+          </a>
+          {% if beat.genre %}<span class="beat-tag">{{ beat.genre }}</span>{% endif %}
+          {% if beat.bpm %}<span class="beat-tag">{{ beat.bpm }} BPM</span>{% endif %}
+          {% if beat.key %}<span class="beat-tag">{{ beat.key }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="beat-row-right">
+        <span class="beat-play-count"><i class="bi bi-play"></i> {{ beat.play_count }}</span>
+        <span class="beat-price">${{ "%.2f"|format(beat.price) }}</span>
+        {% if current_user.is_authenticated %}
+        <button class="like-beat-btn" data-beat-id="{{ beat.id }}" title="Like">
+          <i class="bi bi-heart"></i>
+        </button>
+        {% endif %}
+        <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="btn-ts-icon-sm">
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-music-note-list"></i>
+    <p>No beats found{% if active_genre %} in "{{ active_genre }}"{% endif %}.</p>
+    {% if active_genre %}
+    <a href="{{ url_for('main.discover') }}">Clear filter</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('.like-beat-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    const beatId = this.dataset.beatId;
+    fetch('/like/' + beatId, { method: 'POST' })
+      .then(r => r.json())
+      .then(data => {
+        const icon = this.querySelector('i');
+        if (data.liked) {
+          icon.className = 'bi bi-heart-fill';
+          this.classList.add('liked');
+        } else {
+          icon.className = 'bi bi-heart';
+          this.classList.remove('liked');
+        }
+      });
+  });
+});
+</script>
+{% endblock %}
+
 {% endblock %}
