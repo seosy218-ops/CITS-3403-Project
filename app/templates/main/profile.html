@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ user.username }} — TuneFeed{% endblock %}
+
+{% block full_page %}
+<div class="page-shell container">
+
+  <div class="profile-header">
+    <div class="profile-avatar">{{ user.username[0].upper() }}</div>
+    <div class="profile-info">
+      <h1 class="profile-name">{{ user.username }}</h1>
+      <div class="profile-role-badge {{ 'badge-producer' if user.role == 'producer' else 'badge-listener' }}">
+        {{ user.role.title() }}
+      </div>
+      {% if user.bio %}
+      <p class="profile-bio">{{ user.bio }}</p>
+      {% endif %}
+    </div>
+    <div class="profile-actions">
+      {% if current_user.is_authenticated and current_user.id != user.id %}
+        <a href="{{ url_for('main.follow', user_id=user.id) }}" class="follow-btn {{ 'following' if is_following }}">
+          {{ 'Following' if is_following else 'Follow' }}
+        </a>
+      {% elif current_user.is_authenticated and current_user.id == user.id and user.is_producer() %}
+        <a href="{{ url_for('main.upload') }}" class="btn-ts-primary home-cta-btn">
+          <i class="bi bi-cloud-upload"></i> Upload Beat
+        </a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="profile-stats-bar">
+    <div class="profile-stat">
+      <span class="profile-stat-val">{{ user.beats.count() }}</span>
+      <span class="profile-stat-lbl">Beats</span>
+    </div>
+    <div class="profile-stat">
+      <span class="profile-stat-val">{{ user.followers.count() }}</span>
+      <span class="profile-stat-lbl">Followers</span>
+    </div>
+    <div class="profile-stat">
+      <span class="profile-stat-val">{{ user.following.count() }}</span>
+      <span class="profile-stat-lbl">Following</span>
+    </div>
+  </div>
+
+  {% if beats.items %}
+  <div class="section-divider"></div>
+  <p class="home-section-label" style="margin-bottom:14px;">Beats</p>
+  <div class="beat-list">
+    {% for beat in beats.items %}
+    <div class="beat-row">
+      <div class="beat-row-index">{{ loop.index + (beats.page - 1) * beats.per_page }}</div>
+      <div class="beat-row-info">
+        <div class="beat-row-title">
+          <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}">{{ beat.title }}</a>
+        </div>
+        <div class="beat-row-meta">
+          {% if beat.genre %}<span class="beat-tag">{{ beat.genre }}</span>{% endif %}
+          {% if beat.bpm %}<span class="beat-tag">{{ beat.bpm }} BPM</span>{% endif %}
+          {% if beat.key %}<span class="beat-tag">{{ beat.key }}</span>{% endif %}
+          {% if beat.licence_type %}<span class="beat-tag">{{ beat.licence_type }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="beat-row-right">
+        <span class="beat-play-count"><i class="bi bi-play"></i> {{ beat.play_count }}</span>
+        <span class="beat-play-count"><i class="bi bi-heart"></i> {{ beat.like_count() }}</span>
+        <span class="beat-price">${{ "%.2f"|format(beat.price) }}</span>
+        <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="btn-ts-icon-sm">
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if beats.pages > 1 %}
+  <div style="display:flex;gap:6px;margin-top:20px;justify-content:center;">
+    {% if beats.has_prev %}
+    <a href="{{ url_for('main.profile', user_id=user.id, page=beats.prev_num) }}" class="genre-tab">← Prev</a>
+    {% endif %}
+    <span class="genre-tab active">{{ beats.page }} / {{ beats.pages }}</span>
+    {% if beats.has_next %}
+    <a href="{{ url_for('main.profile', user_id=user.id, page=beats.next_num) }}" class="genre-tab">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  {% elif user.role == 'producer' %}
+  <div class="empty-state">
+    <i class="bi bi-music-note-list"></i>
+    <p>No beats uploaded yet.</p>
+    {% if current_user.is_authenticated and current_user.id == user.id %}
+    <a href="{{ url_for('main.upload') }}" style="color:var(--ts-orange);text-decoration:none;font-size:13px;display:inline-block;margin-top:8px;">
+      Upload your first beat →
+    </a>
+    {% endif %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-headphones"></i>
+    <p>This listener hasn't uploaded any beats.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

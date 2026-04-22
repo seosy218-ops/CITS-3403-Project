@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ beat.title }} — TuneFeed{% endblock %}
+
+{% block full_page %}
+<div class="page-shell container">
+
+  <div class="beat-detail-back">
+    <a href="{{ url_for('main.discover') }}" class="back-link">
+      <i class="bi bi-arrow-left"></i> Back to Discover
+    </a>
+  </div>
+
+  <div class="beat-detail-grid">
+
+    <div class="beat-detail-main">
+      <div class="beat-detail-eyebrow">
+        <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="beat-producer-link">
+          {{ beat.producer.username }}
+        </a>
+        <span class="beat-detail-dot">·</span>
+        <span>{{ beat.uploaded_at.strftime('%b %d, %Y') }}</span>
+      </div>
+
+      <h1 class="beat-detail-title">{{ beat.title }}</h1>
+
+      <div class="beat-detail-tags">
+        {% if beat.genre %}<span class="beat-tag beat-tag-lg">{{ beat.genre }}</span>{% endif %}
+        {% if beat.bpm %}<span class="beat-tag beat-tag-lg">{{ beat.bpm }} BPM</span>{% endif %}
+        {% if beat.key %}<span class="beat-tag beat-tag-lg">{{ beat.key }}</span>{% endif %}
+        {% if beat.mood_tag %}<span class="beat-tag beat-tag-lg">{{ beat.mood_tag }}</span>{% endif %}
+        {% if beat.licence_type %}<span class="beat-tag beat-tag-lg">{{ beat.licence_type }}</span>{% endif %}
+      </div>
+
+      <div class="beat-detail-stats">
+        <span><i class="bi bi-play-circle"></i> {{ beat.play_count }} plays</span>
+        <span><i class="bi bi-heart"></i> <span id="like-count">{{ beat.like_count() }}</span> likes</span>
+      </div>
+    </div>
+
+    <div class="beat-detail-sidebar">
+      <div class="beat-purchase-card">
+        <div class="beat-purchase-price">${{ "%.2f"|format(beat.price) }}</div>
+        <div class="beat-purchase-label">{{ beat.licence_type or 'Non-exclusive' }} Licence</div>
+
+        {% if current_user.is_authenticated %}
+          <button class="btn-ts-primary" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:6px;">
+            <i class="bi bi-cart3"></i> Buy Licence
+          </button>
+          <button id="like-btn" class="like-beat-btn {{ 'liked' if is_liked else '' }}"
+                  data-beat-id="{{ beat.id }}"
+                  style="width:100%;justify-content:center;">
+            <i class="bi {{ 'bi-heart-fill' if is_liked else 'bi-heart' }}"></i>
+            <span id="like-label">{{ 'Liked' if is_liked else 'Like this beat' }}</span>
+          </button>
+        {% else %}
+          <a href="{{ url_for('main.login') }}"
+             class="btn-ts-primary"
+             style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:10px;text-decoration:none;">
+            Sign in to buy
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="beat-producer-card">
+        <div class="beat-producer-card-avatar">{{ beat.producer.username[0].upper() }}</div>
+        <div>
+          <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="beat-producer-link" style="font-size:13px;font-weight:600;">
+            {{ beat.producer.username }}
+          </a>
+          <div class="beat-producer-card-meta">{{ beat.producer.beats.count() }} beats</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const likeBtn = document.getElementById('like-btn');
+if (likeBtn) {
+  likeBtn.addEventListener('click', function() {
+    const beatId = this.dataset.beatId;
+    fetch(`/like/${beatId}`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': document.cookie.match(/csrf_token=([^;]+)/)?.[1] || '' }
+    })
+    .then(r => r.json())
+    .then(data => {
+      const icon  = this.querySelector('i');
+      const label = document.getElementById('like-label');
+      const count = document.getElementById('like-count');
+      if (data.liked) {
+        icon.className = 'bi bi-heart-fill';
+        label.textContent = 'Liked';
+        this.classList.add('liked');
+      } else {
+        icon.className = 'bi bi-heart';
+        label.textContent = 'Like this beat';
+        this.classList.remove('liked');
+      }
+      count.textContent = data.count;
+    });
+  });
+}
+</script>
+{% endblock %}
