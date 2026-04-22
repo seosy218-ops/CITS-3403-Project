@@ -21,8 +21,9 @@
       {% endfor %}
     {% endwith %}
 
-    <form method="POST" action="{{ url_for('login') }}" class="ts-validate needs-validation" novalidate
+    <form method="POST" action="{{ url_for('main.login') }}" class="ts-validate needs-validation" novalidate
           role="form" aria-label="Sign in to TuneFeed">
+      {{ form.hidden_tag() }}
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
         <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
@@ -53,12 +54,12 @@
 
     <div class="auth-switch">
       Don't have an account?
-      <a href="{{ url_for('register') }}" class="auth-switch-link">Join TuneFeed</a>
+      <a href="{{ url_for('main.register') }}" class="auth-switch-link">Join TuneFeed</a>
     </div>
 
     <div class="auth-switch auth-switch-secondary">
       Want to preview the app first?
-      <a href="{{ url_for('discover') }}" class="auth-switch-link">Open Discover</a>
+      <a href="{{ url_for('main.discover') }}" class="auth-switch-link">Open Discover</a>
     </div>
 
     <div class="auth-demo">
