@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Search — TuneFeed{% endblock %}
+
+{% block full_page %}
+<div class="page-shell container">
+
+  <h1 style="font-size:1.8rem;font-weight:700;margin-bottom:20px;">Search</h1>
+
+  <form method="GET" action="{{ url_for('main.search') }}">
+    <div class="search-bar-row">
+      <input type="text" name="q" value="{{ query }}"
+             class="ts-input search-input"
+             placeholder="Search beats, producers…"
+             autofocus />
+      <select name="type" class="ts-input search-type-select">
+        <option value="all"       {{ 'selected' if search_type == 'all' }}>All</option>
+        <option value="beats"     {{ 'selected' if search_type == 'beats' }}>Beats</option>
+        <option value="producers" {{ 'selected' if search_type == 'producers' }}>Producers</option>
+      </select>
+      <input type="text" name="genre" value="{{ genre_filter }}"
+             class="ts-input" placeholder="Genre filter"
+             style="max-width:160px;" />
+      <button type="submit" class="btn-ts-primary search-submit">Search</button>
+    </div>
+  </form>
+
+  {% if query %}
+
+    {% if beats %}
+    <section style="margin-top:28px;">
+      <p class="home-section-label">Beats ({{ beats|length }})</p>
+      <div class="beat-list">
+        {% for beat in beats %}
+        <div class="beat-row">
+          <div class="beat-row-index">{{ loop.index }}</div>
+          <div class="beat-row-info">
+            <div class="beat-row-title">
+              <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}">{{ beat.title }}</a>
+            </div>
+            <div class="beat-row-meta">
+              <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="beat-producer-link">
+                {{ beat.producer.username }}
+              </a>
+              {% if beat.genre %}<span class="beat-tag">{{ beat.genre }}</span>{% endif %}
+              {% if beat.bpm %}<span class="beat-tag">{{ beat.bpm }} BPM</span>{% endif %}
+            </div>
+          </div>
+          <div class="beat-row-right">
+            <span class="beat-price">${{ "%.2f"|format(beat.price) }}</span>
+            <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="btn-ts-icon-sm">
+              <i class="bi bi-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if producers %}
+    <section style="margin-top:28px;">
+      <p class="home-section-label">Producers ({{ producers|length }})</p>
+      <div class="producer-chip-list" style="margin-top:12px;">
+        {% for p in producers %}
+        <a href="{{ url_for('main.profile', user_id=p.id) }}" class="producer-chip">
+          <div class="producer-chip-avatar">{{ p.username[0].upper() }}</div>
+          <div>
+            <div class="producer-chip-name">{{ p.username }}</div>
+            <div class="producer-chip-meta">{{ p.beats.count() }} beats</div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if not beats and not producers %}
+    <div class="empty-state" style="margin-top:40px;">
+      <i class="bi bi-search"></i>
+      <p>No results for "{{ query }}"</p>
+      <a href="{{ url_for('main.search') }}">Clear search</a>
+    </div>
+    {% endif %}
+
+  {% else %}
+  <div class="empty-state" style="margin-top:48px;">
+    <i class="bi bi-search"></i>
+    <p>Start typing to find beats and producers.</p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

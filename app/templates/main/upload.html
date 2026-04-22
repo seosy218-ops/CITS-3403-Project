@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Upload Beat — TuneFeed{% endblock %}
+
+{% block full_page %}
+<div style="min-height:90vh;display:flex;align-items:flex-start;justify-content:center;padding:40px 20px 60px;">
+  <div class="ts-form-card" style="max-width:580px;">
+
+    <h1 style="font-size:1.4rem;font-weight:700;margin-bottom:4px;">Upload a Beat</h1>
+    <p style="color:var(--ts-text-muted);font-size:13px;margin-bottom:28px;">
+      All fields marked with * are required.
+    </p>
+
+    <form method="POST" action="{{ url_for('main.upload') }}" novalidate>
+      {{ form.hidden_tag() }}
+
+      <div class="ts-form-group">
+        {{ form.title.label(class='form-label') }} *
+        {{ form.title(class='ts-input', placeholder='e.g. Midnight Ritual') }}
+        {% for err in form.title.errors %}
+          <div style="color:#ef4444;font-size:11px;margin-top:4px;">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="ts-form-group">
+          {{ form.genre.label(class='form-label') }}
+          {{ form.genre(class='ts-input', placeholder='e.g. Trap') }}
+        </div>
+        <div class="ts-form-group">
+          {{ form.mood_tag.label(class='form-label') }}
+          {{ form.mood_tag(class='ts-input', placeholder='e.g. Dark') }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="ts-form-group">
+          {{ form.bpm.label(class='form-label') }}
+          {{ form.bpm(class='ts-input', placeholder='140') }}
+        </div>
+        <div class="ts-form-group">
+          {{ form.key.label(class='form-label') }}
+          {{ form.key(class='ts-input', placeholder='A minor') }}
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="ts-form-group">
+          {{ form.licence_type.label(class='form-label') }}
+          {{ form.licence_type(class='ts-input') }}
+        </div>
+        <div class="ts-form-group">
+          {{ form.price.label(class='form-label') }} *
+          {{ form.price(class='ts-input', placeholder='29.99') }}
+          {% for err in form.price.errors %}
+            <div style="color:#ef4444;font-size:11px;margin-top:4px;">{{ err }}</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="ts-form-group">
+        {{ form.audio_url.label(class='form-label') }} *
+        {{ form.audio_url(class='ts-input', placeholder='/static/audio/beat.mp3') }}
+        <div style="font-size:11px;color:var(--ts-text-muted);margin-top:4px;">
+          Path to audio file relative to the static folder.
+        </div>
+        {% for err in form.audio_url.errors %}
+          <div style="color:#ef4444;font-size:11px;margin-top:4px;">{{ err }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="ts-form-group">
+        {{ form.cover_url.label(class='form-label') }}
+        {{ form.cover_url(class='ts-input', placeholder='/static/img/cover.jpg') }}
+      </div>
+
+      <button type="submit" class="btn-ts-primary" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:4px;">
+        <i class="bi bi-cloud-upload"></i> Upload Beat
+      </button>
+    </form>
+
+  </div>
+</div>
+{% endblock %}
