@@ -1,47 +1,81 @@
-/* Design tokens for brand palette, surfaces, typography, and spacing radius. */
+/* ============================================================
+   TUNEFEED — Global Styles
+   Design tokens, reset, nav, shared components (buttons,
+   inputs, form card, flash messages).
+   ============================================================ */
+
+/* ── Design tokens ──────────────────────────────────────────
+   All colours and radii are defined here so every component
+   references a variable — changing one value updates the
+   whole UI.
+   ─────────────────────────────────────────────────────────── */
 :root {
-  --ts-orange: #d97706;
-  --ts-orange-light: #f59e0b;
-  --ts-orange-dim: rgba(217, 119, 6, 0.12);
-  --ts-orange-border: rgba(217, 119, 6, 0.28);
-  --ts-teal: #00d4aa;
+  --ts-orange:        #d97706;                      /* primary brand accent */
+  --ts-orange-light:  #f59e0b;                      /* lighter hover state */
+  --ts-orange-dim:    rgba(217, 119, 6, 0.12);      /* subtle tinted fills */
+  --ts-orange-border: rgba(217, 119, 6, 0.28);      /* focus ring / divider */
+  --ts-teal:          #00d4aa;                      /* secondary accent (mood tags, free badge) */
 
-  --ts-bg: #0d0d14;
-  --ts-surface: #161622;
+  --ts-bg:      #0d0d14;                            /* page background */
+  --ts-surface: #161622;                            /* card / form surface */
+  --ts-surface-hover: #1c1c2c;                      /* slightly elevated surface (inputs, hover fills) */
 
-  --ts-text-primary: #eeeef8;
-  --ts-text-secondary: #8888aa;
-  --ts-text-muted: #44445a;
+  --ts-text-primary:   #eeeef8;                     /* headings and body copy */
+  --ts-text-secondary: #8888aa;                     /* labels, subtitles */
+  --ts-text-muted:     #44445a;                     /* placeholder, disabled */
 
-  --ts-border: rgba(255, 255, 255, 0.07);
-  --radius-xl: 24px;
+  --ts-border:  rgba(255, 255, 255, 0.07);          /* subtle separator line */
+  --radius-xl:  24px;                               /* rounded card corners */
+  --ts-nav-height: 58px;
 }
 
-/* Base reset to normalize element sizing and default spacing. */
+/* ── Box-model reset ────────────────────────────────────────
+   border-box makes padding/border part of declared width,
+   preventing layout overflow surprises.
+   ─────────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* Global body styles for app background and default text rendering. */
+/* ── Base body ──────────────────────────────────────────────
+   Sets the dark background and DM Sans font for the entire app.
+   system-ui fallback ensures fast render on first load.
+   ─────────────────────────────────────────────────────────── */
 body {
   font-family: "DM Sans", system-ui, -apple-system, sans-serif;
   background: var(--ts-bg);
   color: var(--ts-text-primary);
 }
 
-/* Top navigation bar shared across app views. */
+/* ── Top navigation ─────────────────────────────────────────
+   Fixed height bar shared across all pages. Semi-transparent
+   background lets page content show through on scroll.
+   ─────────────────────────────────────────────────────────── */
 .top-nav {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 14px 22px;
   border-bottom: 1px solid var(--ts-border);
-  background: rgba(22, 22, 34, 0.92);
+  background: rgba(22, 22, 34, 0.92);       /* slight transparency for depth */
+  min-height: var(--ts-nav-height);
+  position: sticky;
+  top: 0;
+  z-index: 120;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-/* Brand link styling in the header. */
+.top-nav-left,
+.top-nav-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Brand logo link in the nav */
 .brand {
   color: var(--ts-text-primary);
   text-decoration: none;
@@ -49,7 +83,7 @@ body {
   letter-spacing: 0.01em;
 }
 
-/* Layout wrapper for navigation actions. */
+/* Row of navigation links on the right side of the nav */
 .top-nav-links {
   display: flex;
   align-items: center;
@@ -62,35 +96,242 @@ body {
   font-size: 13px;
 }
 
-.top-nav-links a:hover {
+.top-nav-links a:hover,
+.top-nav-links a.active {
   color: var(--ts-orange-light);
 }
 
-/* Standardized page content width and outer padding. */
+.top-nav-links a.active {
+  font-weight: 700;
+}
+
+.top-nav-upload-btn,
+.top-nav-auth-link,
+.top-nav-join-btn {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.top-nav-upload-btn {
+  padding: 9px 16px;
+  border: 1px solid var(--ts-border);
+  color: var(--ts-text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.top-nav-upload-btn:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: #fff;
+}
+
+.top-nav-auth-link {
+  color: var(--ts-text-secondary);
+}
+
+.top-nav-auth-link:hover {
+  color: var(--ts-text-primary);
+}
+
+.top-nav-join-btn {
+  padding: 9px 16px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--ts-orange), var(--ts-orange-light));
+  box-shadow: 0 6px 16px rgba(217, 119, 6, 0.22);
+}
+
+.top-nav-join-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(217, 119, 6, 0.3);
+}
+
+.nav-profile-dropdown {
+  position: relative;
+}
+
+.nav-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 10px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--ts-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ts-text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-profile-btn:hover,
+.nav-profile-dropdown.show .nav-profile-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+.nav-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ts-orange-dim), rgba(255, 255, 255, 0.04));
+  color: var(--ts-orange-light);
+  font-weight: 800;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.nav-profile-avatar img,
+.nav-profile-header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nav-profile-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.05;
+}
+
+.nav-profile-name {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.nav-profile-sub {
+  font-size: 10px;
+  color: var(--ts-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.nav-profile-menu {
+  margin-top: 10px !important;
+  min-width: 240px;
+  padding: 10px;
+  border-radius: 18px;
+  border: 1px solid var(--ts-border);
+  background: rgba(24, 24, 36, 0.98);
+  box-shadow: 0 22px 50px rgba(0, 0, 0, 0.45);
+}
+
+.nav-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px 10px;
+  margin-bottom: 4px;
+}
+
+.nav-profile-header-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--ts-orange-dim), rgba(255,255,255,0.04));
+  color: var(--ts-orange-light);
+  font-weight: 800;
+}
+
+.nav-profile-header-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--ts-text-primary);
+}
+
+.nav-profile-header-sub {
+  font-size: 11px;
+  color: var(--ts-text-muted);
+}
+
+.nav-profile-menu .dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--ts-text-primary);
+  font-size: 13px;
+}
+
+.nav-profile-menu .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+.nav-profile-menu .dropdown-item i {
+  color: var(--ts-orange-light);
+}
+
+.nav-signout {
+  color: #ff8a8a !important;
+}
+
+.nav-signout i {
+  color: #ff8a8a !important;
+}
+
+@media (min-width: 992px) {
+  .nav-profile-dropdown:hover .dropdown-menu {
+    display: block;
+  }
+}
+
+@media (max-width: 720px) {
+  .top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: unset;
+  }
+
+  .top-nav-left,
+  .top-nav-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .nav-profile-meta {
+    display: none;
+  }
+}
+
+/* ── Page shell ─────────────────────────────────────────────
+   Centred content wrapper used by discover and other standard
+   pages. Max-width keeps long lines readable.
+   ─────────────────────────────────────────────────────────── */
 .page-shell {
   max-width: 1080px;
   margin: 0 auto;
   padding: 30px 20px 60px;
 }
 
-.discover-hero h1 {
-  font-size: 2rem;
-  margin-bottom: 7px;
-}
+/* Discover page hero section */
+.discover-hero h1 { font-size: 2rem; margin-bottom: 7px; }
+.discover-hero p  { color: var(--ts-text-secondary); margin-bottom: 22px; }
 
-.discover-hero p {
-  color: var(--ts-text-secondary);
-  margin-bottom: 22px;
-}
-
-/* Discover view card grid responsive behavior. */
+/* ── Discover grid ──────────────────────────────────────────
+   auto-fit + minmax creates a responsive grid that collapses
+   to fewer columns on small screens without media queries.
+   ─────────────────────────────────────────────────────────── */
 .discover-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 14px;
 }
 
-/* Card primitive for discover producer samples. */
+/* Producer card on the discover page */
 .discover-card {
   background: var(--ts-surface);
   border: 1px solid var(--ts-border);
@@ -98,17 +339,10 @@ body {
   padding: 16px;
 }
 
-.discover-card h2 {
-  font-size: 1.2rem;
-  margin-bottom: 5px;
-}
+.discover-card h2 { font-size: 1.2rem; margin-bottom: 5px; }
+.discover-card p  { color: var(--ts-text-secondary); font-size: 13px; margin-bottom: 14px; }
 
-.discover-card p {
-  color: var(--ts-text-secondary);
-  font-size: 13px;
-  margin-bottom: 14px;
-}
-
+/* Small uppercase label (TRENDING / RISING / NEW DROP) */
 .discover-tag {
   color: var(--ts-orange);
   font-size: 10px;
@@ -116,7 +350,11 @@ body {
   margin-bottom: 10px;
 }
 
-/* Reusable primary action button styling. */
+/* ── Primary action button ──────────────────────────────────
+   Used on cards, auth forms, and empty states.
+   width: 100% makes it fill its container by default;
+   overridden with inline style where a narrower version is needed.
+   ─────────────────────────────────────────────────────────── */
 .btn-ts-primary {
   width: 100%;
   background: var(--ts-orange);
@@ -129,12 +367,11 @@ body {
   cursor: pointer;
   transition: all 0.2s;
 }
+.btn-ts-primary:hover { background: var(--ts-orange-light); }
 
-.btn-ts-primary:hover {
-  background: var(--ts-orange-light);
-}
-
-/* Shared form card shell used by auth pages. */
+/* ── Form card ──────────────────────────────────────────────
+   Centred card container used on login and register pages.
+   ─────────────────────────────────────────────────────────── */
 .ts-form-card {
   background: var(--ts-surface);
   border: 1px solid var(--ts-border);
@@ -144,10 +381,9 @@ body {
   width: 100%;
 }
 
-.ts-form-group {
-  margin-bottom: 16px;
-}
+.ts-form-group { margin-bottom: 16px; }
 
+/* Uppercase label style for form fields */
 .ts-form-group label {
   display: block;
   font-size: 11px;
@@ -158,7 +394,10 @@ body {
   text-transform: uppercase;
 }
 
-/* Shared input visual style and focus feedback. */
+/* ── Shared input style ─────────────────────────────────────
+   Used by all text, email, password, and select inputs.
+   The focus ring uses the brand orange to draw attention.
+   ─────────────────────────────────────────────────────────── */
 .ts-input {
   width: 100%;
   background: rgba(255, 255, 255, 0.05);
@@ -170,25 +409,44 @@ body {
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
 }
-
-.ts-input::placeholder {
-  color: var(--ts-text-muted);
-}
-
+.ts-input::placeholder { color: var(--ts-text-muted); }
 .ts-input:focus {
   border-color: var(--ts-orange-border);
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);  /* soft glow ring on focus */
   background: rgba(255, 255, 255, 0.07);
 }
 
-/* Custom select arrow treatment for consistent cross-browser visuals. */
+/* ── Flash messages ─────────────────────────────────────────
+   Rendered by base.html from Flask's flash() system.
+   Category name (success/danger/warning/info) is appended as
+   a modifier class: ts-flash-success, ts-flash-danger, etc.
+   ─────────────────────────────────────────────────────────── */
+.ts-flash {
+  padding: 10px 22px;
+  font-size: 13px;
+  text-align: center;
+}
+.ts-flash-success { background: rgba(0, 212, 170, 0.12); color: #00d4aa; border-bottom: 1px solid rgba(0,212,170,0.2); }
+.ts-flash-danger  { background: rgba(217, 119, 6, 0.12);  color: #f59e0b; border-bottom: 1px solid rgba(217,119,6,0.2); }
+.ts-flash-warning { background: rgba(217, 119, 6, 0.08);  color: #d97706; border-bottom: 1px solid rgba(217,119,6,0.15); }
+.ts-flash-info    { background: rgba(255,255,255,0.05);   color: #8888aa; border-bottom: 1px solid var(--ts-border); }
+
+/* ── Select input ───────────────────────────────────────────
+   Hides the browser's native dropdown arrow and replaces it
+   with two CSS triangles that match the dark theme.
+   background-position places them side-by-side to form a
+   chevron shape.
+   ─────────────────────────────────────────────────────────── */
 select.ts-input {
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--ts-text-secondary) 50%),
+  background-image:
+    linear-gradient(45deg,  transparent 50%, var(--ts-text-secondary) 50%),
     linear-gradient(135deg, var(--ts-text-secondary) 50%, transparent 50%);
-  background-position: calc(100% - 17px) calc(50% + 1px), calc(100% - 12px) calc(50% + 1px);
+  background-position:
+    calc(100% - 17px) calc(50% + 1px),
+    calc(100% - 12px) calc(50% + 1px);
   background-size: 5px 5px, 5px 5px;
   background-repeat: no-repeat;
 }
