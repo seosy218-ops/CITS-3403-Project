@@ -1,0 +1,797 @@
+/* ============================================================
+   FEED — Full-screen TikTok-style vertical scroll feed
+   ============================================================ */
+
+/* ── Feed root container ────────────────────────────────────
+   Fixed positioning below the nav bar (52px) so the feed
+   fills the remaining viewport without a scrollbar on <body>.
+   overflow: hidden clips cards that are above/below the
+   current snap position.
+   ─────────────────────────────────────────────────────────── */
+.feed-root {
+  position: fixed;
+  top: var(--ts-nav-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  background: var(--ts-bg);
+  z-index: 10;
+}
+
+/* ── Scroll track ───────────────────────────────────────────
+   scroll-snap-type: y mandatory forces the browser to always
+   land on a snap point — cards never stop mid-scroll.
+   scrollbar-width: none hides the scrollbar visually while
+   keeping scroll functionality intact.
+   ─────────────────────────────────────────────────────────── */
+.feed-scroll {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;    /* TikTok-style full-card snapping */
+  scrollbar-width: none;            /* Firefox */
+}
+.feed-scroll::-webkit-scrollbar { display: none; } /* Chrome / Safari */
+
+/* ── Individual beat card ───────────────────────────────────
+   Each card is exactly 100% of the container height so one
+   card fills the screen at a time.
+   scroll-snap-stop: always prevents fast swipes from skipping
+   cards — the user must stop on every card.
+   ─────────────────────────────────────────────────────────── */
+.feed-card {
+  position: relative;
+  width: 100%;
+  height: 100%;                   /* fills the fixed .feed-root container */
+  scroll-snap-align: start;       /* snap to the top edge of each card */
+  scroll-snap-stop: always;       /* never skip a card during fast scroll */
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Card background ────────────────────────────────────────
+   Single consistent dark colour so the waveform and orange
+   accents remain the visual focal point on every card.
+   ─────────────────────────────────────────────────────────── */
+.feed-bg { position: absolute; inset: 0; background: #0c0d17; }
+.feed-bg-0,.feed-bg-1,.feed-bg-2,.feed-bg-3,
+.feed-bg-4,.feed-bg-5,.feed-bg-6,.feed-bg-7 { background: #0c0d17; }
+
+/* ── Vignette overlay ───────────────────────────────────────
+   Radial gradient darkens the edges of the card so the
+   bottom-left text and right rail are readable against any
+   background. pointer-events: none ensures clicks pass through.
+   ─────────────────────────────────────────────────────────── */
+.feed-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+}
+
+/* ── Waveform shell ─────────────────────────────────────────
+  Centred oval container that houses the waveform canvas.
+  clamp() sizes it responsively between a minimum and
+  maximum value.
+  ─────────────────────────────────────────────────────────── */
+.feed-waveform-shell {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  transform: translate(-50%, -50%);
+  width:  clamp(320px, 70vw, 940px);
+  height: clamp(150px, 28vh, 310px);
+  border-radius: 32px;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  background: linear-gradient(180deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(245,120,10,0.018) 50%,
+    rgba(255,255,255,0.012) 100%);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.28),
+    0  0  40px rgba(245,120,10,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  cursor: pointer;
+  animation: shell-breathe 4s ease-in-out infinite;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+@keyframes shell-breathe {
+  0%, 100% { box-shadow: 0 24px 70px rgba(0,0,0,0.28), 0 0 28px rgba(245,120,10,0.04), inset 0 1px 0 rgba(255,255,255,0.07); }
+  50%       { box-shadow: 0 24px 70px rgba(0,0,0,0.28), 0 0 60px rgba(245,120,10,0.13), inset 0 1px 0 rgba(255,255,255,0.07); }
+}
+
+/* Active playing state: canvas bloom takes over; shell border brightens */
+.feed-card.is-active .feed-waveform-shell {
+  animation: none;
+  border-color: rgba(245, 158, 11, 0.38);
+  box-shadow:
+    0 24px 70px rgba(0,0,0,0.32),
+    0  0  55px rgba(245,120,10,0.14),
+    0  0 110px rgba(245,120,10,0.06),
+    inset 0 1px 0 rgba(255,255,255,0.10);
+}
+
+/* Tap-to-play hint — shown when browser blocks autoplay */
+.feed-tap-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 28px;
+  background: rgba(0,0,0,0.38);
+  backdrop-filter: blur(2px);
+  z-index: 10;
+  color: #fff;
+  pointer-events: none;
+  animation: tap-hint-pulse 1.8s ease-in-out infinite;
+}
+.feed-tap-hint i  { font-size: 36px; color: var(--ts-orange-light); }
+.feed-tap-hint span { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; opacity: 0.85; }
+
+@keyframes tap-hint-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1);    }
+  50%       { opacity: 1;    transform: scale(1.04); }
+}
+
+/* Canvas fills the oval shell exactly; border-radius clips the drawn bars */
+.feed-waveform-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* ── Transport dock ─────────────────────────────────────────
+   Clean playback strip below the waveform. Hidden until the
+   card is active so the feed remains uncluttered.
+   ─────────────────────────────────────────────────────────── */
+.feed-transport-dock {
+  position: absolute;
+  left: 50%;
+  top: calc(47% + (clamp(130px, 25vh, 280px) / 2) + 16px);
+  transform: translateX(-50%) translateY(10px);
+  width: min(620px, calc(100vw - 36px));
+  z-index: 6;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.feed-card.is-active .feed-transport-dock {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.feed-transport-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.feed-transport-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(18, 18, 28, 0.75);
+  color: var(--ts-text-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.16s ease, background 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  backdrop-filter: blur(10px);
+}
+
+.feed-transport-btn i {
+  line-height: 1;
+  font-size: 18px;
+}
+
+.feed-transport-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.08);
+}
+
+.feed-transport-btn.primary {
+  width: 52px;
+  height: 52px;
+  border-color: rgba(217,119,6,0.35);
+  background: linear-gradient(135deg, var(--ts-orange), var(--ts-orange-light));
+  box-shadow: 0 10px 22px rgba(217, 119, 6, 0.24);
+  color: #fff;
+}
+
+.feed-transport-btn.is-playing {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ── Skip ±15s buttons ──────────────────────────────────────
+   Fully circular, inheriting the base .feed-transport-btn style.
+   Bold white "−15" / "+15" label makes the skip direction and
+   amount instantly clear without needing any directional icon.
+   ─────────────────────────────────────────────────────────── */
+.feed-skip-label {
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.feed-transport-sliders {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(160px, 0.65fr);
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 18px;
+  background: rgba(10, 10, 18, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.feed-transport-slider-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.feed-transport-labels {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,0.72);
+}
+
+.feed-transport-labels span:last-child {
+  color: var(--ts-text-primary);
+}
+
+.feed-transport-seek,
+.feed-transport-volume {
+  width: 100%;
+  accent-color: var(--ts-orange);
+}
+
+/* ── Right action rail ──────────────────────────────────────
+   Vertical column of interactive buttons on the right side,
+   matching TikTok's UI layout. Positioned above the bottom
+   info overlay so they don't overlap.
+   ─────────────────────────────────────────────────────────── */
+.feed-rail {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  bottom: auto;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  z-index: 20;
+}
+
+/* Producer avatar circle and follow button stacked vertically */
+.feed-rail-avatar-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+/* Circular producer avatar — shows image if available, initial letter otherwise */
+.feed-rail-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.1);
+  color: var(--ts-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  overflow: hidden;                         /* clips the image to the circle */
+}
+.feed-rail-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Small circular follow/unfollow button below the avatar */
+.feed-follow-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ts-orange);             /* orange + = follow */
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+.feed-follow-btn.is-following { background: rgba(255,255,255,0.2); } /* grey tick = already following */
+.feed-follow-btn:hover { transform: scale(1.15); }
+
+/* Wrapper for each icon + count pair (like, comment, plays) */
+.feed-rail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Circular icon button (like, comment) */
+.feed-rail-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s, background 0.15s;
+}
+.feed-rail-btn i { line-height: 1; }
+.feed-rail-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+
+/* Like button turns red with a pop animation when active */
+.feed-like-btn.is-liked { color: #ff4d6d; }
+.feed-like-btn.is-liked i { animation: pop-heart 0.3s ease; }
+
+/* Heart pop keyframe — scales up then snaps back for a satisfying click feel */
+@keyframes pop-heart {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* Plays display is not interactive — disable hover effects */
+.feed-rail-plays { cursor: default; }
+.feed-rail-plays:hover { transform: none; background: rgba(0,0,0,0.35); }
+
+/* Count label below each action button */
+.feed-rail-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);  /* improves legibility on light backgrounds */
+}
+
+/* ── Bottom-left beat info overlay ──────────────────────────
+   Absolute-positioned over the card, anchored bottom-left.
+   right: 80px leaves space for the action rail.
+   pointer-events: none lets clicks pass through to the card
+   except on interactive children (links, buttons).
+   ─────────────────────────────────────────────────────────── */
+.feed-info {
+  position: absolute;
+  left: 16px;
+  right: 92px;                              /* avoid overlapping the action rail */
+  bottom: 20px;
+  z-index: 20;
+  pointer-events: none;
+}
+.feed-info a,
+.feed-info button { pointer-events: all; }  /* re-enable clicks on interactive children */
+
+/* @username handle above the beat title */
+.feed-producer-handle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255,255,255,0.75);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  margin-bottom: 6px;
+}
+.feed-producer-handle:hover { color: #fff; }
+
+/* Beat title — clamp() scales font size between mobile and desktop */
+.feed-beat-title {
+  font-size: clamp(1.3rem, 3.5vw, 2rem);
+  font-weight: 800;
+  line-height: 1.15;
+  color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  margin-bottom: 8px;
+}
+
+/* Row of metadata tags (genre, BPM, key, mood) */
+.feed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+/* Individual metadata pill tag */
+.feed-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.02em;
+}
+/* Mood tag uses teal accent to distinguish it from factual tags */
+.feed-tag-mood { color: var(--ts-teal); border-color: rgba(0,212,170,0.3); background: rgba(0,212,170,0.08); }
+
+.feed-price-row { display: flex; align-items: center; gap: 8px; }
+
+/* Paid price badge — orange tinted */
+.feed-price-badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(217,119,6,0.22);
+  border: 1px solid rgba(217,119,6,0.4);
+  color: var(--ts-orange-light);
+  letter-spacing: 0.04em;
+}
+/* Free badge — teal tinted, visually distinct from paid */
+.feed-price-free {
+  background: rgba(0,212,170,0.15);
+  border-color: rgba(0,212,170,0.35);
+  color: var(--ts-teal);
+}
+/* Licence type label (Non-exclusive / Exclusive) */
+.feed-licence {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ── 3-tier pricing panel ───────────────────────────────────
+   Horizontal row of Lease / Premium / Exclusive price blocks.
+   Sits directly below the metadata tags in the feed-info area.
+   ─────────────────────────────────────────────────────────── */
+.feed-pricing-panel {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+/* Each tier block — small pill with label + value */
+.feed-pricing-tier {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  min-width: 58px;
+}
+
+/* When only one price exists, make it wider */
+.feed-pricing-tier-solo { min-width: 80px; }
+
+.feed-pricing-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 1px;
+}
+
+.feed-pricing-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ts-orange-light);
+}
+
+/* Exclusive tier has a gold tint to signal prestige */
+.feed-pricing-excl {
+  border-color: rgba(245,158,11,0.3);
+  background: rgba(245,158,11,0.08);
+}
+.feed-pricing-excl .feed-pricing-value { color: #f59e0b; }
+
+/* ── Details & Purchase ghost button ────────────────────────
+   Matches the reference project's ghost button style.
+   ─────────────────────────────────────────────────────────── */
+.feed-ghost-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: var(--ts-text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: transform 0.2s, border-color 0.2s, background 0.2s;
+  backdrop-filter: blur(4px);
+}
+.feed-ghost-btn i { font-size: 13px; color: var(--ts-orange); }
+.feed-ghost-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(217,119,6,0.75);
+  background: rgba(217,119,6,0.16);
+  color: #fff;
+}
+
+/* ── Comments drawer ────────────────────────────────────────
+   Slides up from the bottom of the card via CSS transform.
+   translateY(100%) = fully hidden below the card.
+   translateY(0)    = fully visible (triggered by .is-open).
+   backdrop-filter: blur() frosted-glass effect on the dark bg.
+   ─────────────────────────────────────────────────────────── */
+.feed-drawer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 56%;
+  background: rgba(13,13,20,0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);      /* Safari prefix */
+  border-top: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px 18px 0 0;
+  z-index: 40;                              /* above all card content */
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);              /* hidden: starts below the card */
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);  /* spring-like slide */
+}
+.feed-drawer.is-open { transform: translateY(0); } /* visible: slides into view */
+
+/* Drawer header bar with title and close button */
+.feed-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.feed-drawer-title { font-size: 14px; font-weight: 700; }
+
+/* Ghost close button — no background, just an icon */
+.feed-drawer-close {
+  background: none;
+  border: none;
+  color: var(--ts-text-secondary);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.feed-drawer-close:hover { color: var(--ts-text-primary); }
+
+/* Scrollable comment list area — flex: 1 lets it fill remaining height */
+.feed-drawer-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+
+/* Loading spinner and empty/error text */
+.feed-drawer-loading {
+  text-align: center;
+  color: var(--ts-text-muted);
+  font-size: 13px;
+  padding: 20px 0;
+}
+/* Spin animation applied to the Bootstrap icon while comments load */
+.feed-drawer-loading i { animation: spin 0.8s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Comment item layout ────────────────────────────────────
+   Flex row: avatar circle on the left, text body on the right.
+   ─────────────────────────────────────────────────────────── */
+.feed-comment-item {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+/* Small circular avatar — image or initial letter */
+.feed-comment-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  flex-shrink: 0;                           /* never shrinks smaller than 30px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ts-text-secondary);
+  overflow: hidden;
+}
+.feed-comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.feed-comment-body   { flex: 1; min-width: 0; }  /* min-width: 0 prevents overflow in flex */
+.feed-comment-author { font-size: 12px; font-weight: 700; color: var(--ts-text-secondary); margin-bottom: 2px; }
+.feed-comment-text   { font-size: 13px; color: var(--ts-text-primary); line-height: 1.4; word-break: break-word; }
+
+/* Row of per-comment action buttons (like, reply, delete) */
+.feed-comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+/* Ghost action buttons — no background, inherit parent width via flex */
+.feed-comment-action-btn {
+  background: none;
+  border: none;
+  color: var(--ts-text-muted);
+  font-size: 11px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+}
+.feed-comment-action-btn:hover       { color: var(--ts-text-secondary); }
+.feed-comment-action-btn.is-liked    { color: #ff4d6d; }      /* red heart when liked */
+.feed-comment-action-btn.is-disliked { color: #60a5fa; }      /* blue thumb when disliked */
+.feed-comment-delete                 { color: rgba(255,80,80,0.5); }
+.feed-comment-delete:hover           { color: rgba(255,80,80,0.9); }
+
+/* Orange "↩ @username" indicator above the reply body text */
+.feed-comment-reply-to { font-size: 11px; color: var(--ts-orange); margin-bottom: 2px; }
+
+/* Replies indented with a left border to show nesting */
+.feed-comment-replies { padding-left: 20px; margin-top: 8px; border-left: 1px solid rgba(255,255,255,0.06); }
+
+/* ── Reply-to banner ────────────────────────────────────────
+   Injected by JS (initReplyBanners) between the drawer header
+   and the comment list. Hidden by default; .is-active shows it.
+   ─────────────────────────────────────────────────────────── */
+.feed-drawer-replying-to {
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  padding: 4px 16px;
+  display: none;                            /* hidden until JS sets is-active */
+}
+.feed-drawer-replying-to.is-active { display: block; }
+.feed-drawer-replying-to span      { color: var(--ts-orange); }  /* @username in orange */
+.feed-drawer-replying-cancel {
+  background: none; border: none; color: var(--ts-text-muted);
+  font-size: 11px; cursor: pointer; margin-left: 6px;
+}
+
+/* ── Comment input row ──────────────────────────────────────
+   Pinned to the bottom of the drawer via the flex column
+   layout on .feed-drawer. border-top separates it from the list.
+   ─────────────────────────────────────────────────────────── */
+.feed-drawer-input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 14px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+/* Pill-shaped comment text input */
+.feed-drawer-input {
+  flex: 1;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 9px 14px;
+  font-size: 13px;
+  color: var(--ts-text-primary);
+  outline: none;
+  font-family: inherit;
+}
+.feed-drawer-input::placeholder { color: var(--ts-text-muted); }
+.feed-drawer-input:focus { border-color: var(--ts-orange-border); }
+
+/* Orange circular send button */
+.feed-drawer-send {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--ts-orange);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+.feed-drawer-send:hover { background: var(--ts-orange-light); }
+
+/* Shown instead of the input when user is not logged in */
+.feed-drawer-login-prompt {
+  font-size: 13px;
+  color: var(--ts-orange);
+  text-decoration: none;
+  text-align: center;
+  flex: 1;
+}
+
+/* ── Empty state ─────────────────────────────────────────── */
+.feed-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  text-align: center;
+  padding: 40px;
+}
+.feed-empty-icon { font-size: 3rem; color: var(--ts-text-muted); margin-bottom: 8px; }
+.feed-empty h2   { font-size: 1.4rem; }
+.feed-empty p    { color: var(--ts-text-secondary); font-size: 14px; margin-bottom: 8px; }
+
+/* ── Infinite scroll sentinel ───────────────────────────────
+   1px invisible element at the end of the feed list.
+   IntersectionObserver in feed.js watches this element;
+   when it enters the viewport the next page of beats is loaded.
+   ─────────────────────────────────────────────────────────── */
+.feed-load-more-sentinel { height: 1px; }
+
+/* ── Responsive adjustments ─────────────────────────────────
+   Smaller font and tighter spacing on mobile viewports.
+   ─────────────────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .feed-beat-title   { font-size: 1.2rem; }
+  .feed-waveform-shell { height: clamp(100px, 20vh, 200px); }
+  .feed-transport-dock {
+    top: calc(47% + (clamp(100px, 20vh, 200px) / 2) + 12px);
+    width: calc(100vw - 24px);
+  }
+  .feed-transport-sliders {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 12px;
+  }
+  .feed-transport-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .feed-transport-btn.primary {
+    width: 48px;
+    height: 48px;
+  }
+  .feed-rail  { right: 10px; }
+  .feed-info  { right: 74px; }
+  .feed-drawer { height: 65%; }            /* taller drawer on small screens */
+}

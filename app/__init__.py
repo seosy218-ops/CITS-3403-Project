@@ -1,38 +1,52 @@
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask
+from flask_login import LoginManager
+from flask_wtf.csrf import CSRFProtect
+from app.config import Config
+
+# Defined at module level so other modules can import them without triggering circular imports
+login_manager = LoginManager()
+csrf = CSRFProtect()
 
 
-def create_app() -> Flask:
-    # Initialize the Flask application and register all route handlers.
+def create_app(config_class=Config):
     app = Flask(__name__)
+    app.config.from_object(config_class)
 
-    # Redirect the root path to the sign-in flow as the default entry point.
-    @app.route("/")
-    def index():
-        return redirect(url_for("login"))
+    # Import db here (not at module level) to avoid circular import:
+    # models.py imports nothing from app/, so keeping db there breaks the cycle
+    from app.models import db
+    db.init_app(app)
 
-    # Render the login page and forward to Discover after a demo form submit.
-    @app.route("/login", methods=["GET", "POST"])
-    def login():
-        if request.method == "POST":
-            return redirect(url_for("feed"))
-        return render_template("auth/login.html")
+    login_manager.init_app(app)
+    login_manager.login_view = 'main.login'       # redirect target when @login_required fails
+    login_manager.login_message = 'Please sign in to continue.'
+    login_manager.login_message_category = 'warning'
 
-    # Render the registration page and route back to sign-in on submit.
-    @app.route("/register", methods=["GET", "POST"])
-    def register():
-        if request.method == "POST":
-            return redirect(url_for("login"))
-        return render_template("auth/register.html")
+    csrf.init_app(app)
 
-    # Display the discover view with sample producer cards.
-    @app.route("/discover", methods=["GET"])
-    def discover():
-        return render_template("main/discover.html")
+    @login_manager.user_loader
+    def load_user(user_id):
+        # Called on every request to reload the user object from the session cookie
+        from app.models import User
+        return User.query.get(int(user_id))
 
-    # Display the listen feed layout (visual baseline only).
-    @app.route("/feed", methods=["GET"])
-    def feed():
-        return render_template("main/feed.html")
+    @app.template_filter('format_num')
+    def format_num(n):
+        # Jinja2 filter: renders large integers as 1.2K / 3.4M for display
+        n = int(n or 0)
+        if n >= 1_000_000:
+            return f'{n / 1_000_000:.1f}M'
+        if n >= 1_000:
+            return f'{n / 1_000:.1f}K'
+        return str(n)
 
-    # Return the configured Flask app instance to the caller.
+    from app.routes import main
+    app.register_blueprint(main)
+
+    from app.api.routes import api
+    app.register_blueprint(api, url_prefix='/api')  # all API routes live under /api/
+
+    with app.app_context():
+        db.create_all()  # create missing tables on startup; no-op if tables already exist
+
     return app
