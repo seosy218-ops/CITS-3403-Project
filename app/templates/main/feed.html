@@ -2,311 +2,235 @@
 
 {% block title %}TuneFeed — Listen{% endblock %}
 
-{% block full_page %}
-<div class="feed-wrapper" id="feed-wrapper">
-  <a href="{{ url_for('discover') }}" class="feed-back-btn" title="Back to discover">
-    <i class="bi bi-arrow-left"></i>
-  </a>
-
-  <button type="button" class="feed-player-fab" id="feed-player-fab" title="Inspect tune" aria-label="Inspect tune">
-    <i class="bi bi-music-note-beamed"></i>
-    <span class="feed-player-fab-text">Inspect Tune</span>
-  </button>
-
-  <div class="feed-scroll-container" id="feed-scroll">
-    {% for idx in [1, 2, 3] %}
-    <div class="feed-card" id="feed-card-{{ idx }}">
-      <div class="feed-card-visual">
-        <div class="feed-card-img feed-card-img-{{ idx }}"></div>
-        <div class="feed-card-overlay"></div>
-        <div class="feed-wave-shell"><div class="feed-wave-canvas"></div></div>
-      </div>
-
-      <div class="feed-side-panel">
-        <div class="feed-producer">
-          <a href="#" class="feed-producer-avatar-link"><div class="feed-producer-avatar">—</div></a>
-          <div class="feed-producer-text">
-            <span class="feed-producer-name">—</span>
-            <span class="feed-producer-genre">—</span>
-          </div>
-
-          <button class="feed-ghost-btn feed-producer-info-btn"><i class="bi bi-person"></i> Info</button>
-          <button class="btn-follow"><i class="bi bi-plus-circle"></i><span class="follow-label">Follow</span></button>
-        </div>
-
-        <div class="feed-beats-meta">
-          <div class="feed-meta-item"><span class="feed-meta-label">BPM</span><span class="feed-meta-value">—</span></div>
-          <div class="feed-meta-item"><span class="feed-meta-label">Key</span><span class="feed-meta-value">—</span></div>
-        </div>
-
-        <div class="feed-stats">
-          <div class="feed-stat-item"><span class="feed-stat-icon"><i class="bi bi-play-circle"></i></span><span class="feed-stat-value">—</span><span class="feed-stat-label">plays</span></div>
-          <div class="feed-stat-item"><span class="feed-stat-icon"><i class="bi bi-heart"></i></span><span class="feed-stat-value">—</span><span class="feed-stat-label">likes</span></div>
-          <div class="feed-stat-item"><span class="feed-stat-icon"><i class="bi bi-chat-dots"></i></span><span class="feed-stat-value">—</span><span class="feed-stat-label">comments</span></div>
-        </div>
-      </div>
-
-      <div class="feed-info-overlay">
-        <h1 class="feed-title">—</h1>
-        <p class="feed-description">—</p>
-
-        <div class="feed-overlay-bottom">
-          <div class="feed-prices">
-            <div class="feed-price-heading">Purchase Details</div>
-            <div class="feed-price-item"><span class="feed-price-label">Lease</span><span class="feed-price-value">—</span></div>
-            <div class="feed-price-item"><span class="feed-price-label">Premium</span><span class="feed-price-value">—</span></div>
-            <div class="feed-price-item"><span class="feed-price-label">Exclusive</span><span class="feed-price-value">—</span></div>
-          </div>
-          <div class="feed-actions">
-            <button class="feed-ghost-btn feed-details-btn"><i class="bi bi-info-circle"></i> Details & Purchase</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/feed.css') }}" />
 {% endblock %}
 
-{% block extra_css %}
-<style>
-.feed-wrapper {
-  position: fixed;
-  top: 62px;
-  right: 0;
-  left: 0;
-  bottom: 0;
-  background: var(--ts-bg);
-  overflow: hidden;
-  z-index: 20;
-}
+{% block full_page %}
+<div class="feed-root" id="feed-root">
 
-.feed-back-btn {
-  position: fixed;
-  top: 80px;
-  left: 20px;
-  z-index: 50;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(13, 13, 20, 0.9);
-  border: 2px solid var(--ts-border);
-  color: var(--ts-text-primary);
-  font-size: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-}
+  <audio id="feed-audio-player" preload="metadata" crossorigin="anonymous"></audio>
 
-.feed-player-fab {
-  position: fixed;
-  left: 50%;
-  top: 24%;
-  transform: translateX(-50%);
-  z-index: 60;
-  min-width: 182px;
-  height: 54px;
-  padding: 0 20px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: linear-gradient(180deg, rgba(30, 30, 40, 0.44) 0%, rgba(13, 13, 20, 0.56) 100%);
-  color: var(--ts-text-primary);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-}
+  {# ── EMPTY STATE ── #}
+  {% if not beats %}
+  <div class="feed-empty">
+    <i class="bi bi-music-note-beamed feed-empty-icon"></i>
+    <h2>No beats yet</h2>
+    <p>Be the first to upload a beat and start the feed.</p>
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('main.upload') }}" class="btn-ts-primary" style="display:inline-block;width:auto;padding:12px 28px;text-decoration:none;">Upload a Beat</a>
+    {% else %}
+      <a href="{{ url_for('main.register') }}" class="btn-ts-primary" style="display:inline-block;width:auto;padding:12px 28px;text-decoration:none;">Join TuneFeed</a>
+    {% endif %}
+  </div>
+  {% endif %}
 
-.feed-player-fab-text {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: .04em;
-  text-transform: uppercase;
-}
+  {# ── FEED SCROLL CONTAINER ── #}
+  <div class="feed-scroll" id="feed-scroll">
 
-.feed-scroll-container {
-  width: 100%;
-  height: 100%;
-  overflow-y: scroll;
-  scroll-snap-type: y mandatory;
-}
+    {% for beat in beats %}
+    {% set bg_index = loop.index0 % 8 %}
+    <div class="feed-card"
+         id="feed-card-{{ beat.id }}"
+         data-beat-id="{{ beat.id }}"
+         data-beat='{{ {
+           "id": beat.id,
+           "title": beat.title,
+           "producer": beat.producer.username,
+           "producer_id": beat.producer_id,
+           "audio_url": beat.audio_url,
+           "bpm": beat.bpm,
+           "key": beat.key or "",
+           "genre": beat.genre or "",
+           "duration": beat.duration or "3:00"
+         } | tojson }}'>
 
-.feed-card {
-  position: relative;
-  width: 100%;
-  height: calc(100vh - 62px);
-  min-height: 100svh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #0a0a10, #161628);
-  overflow: hidden;
-}
+      {# ── BACKGROUND ── #}
+      <div class="feed-bg feed-bg-{{ bg_index }}"></div>
+      <div class="feed-vignette"></div>
 
-.feed-card-visual {
-  position: absolute;
-  inset: 0;
-}
+      {# ── WAVEFORM SHELL (visual centrepiece — no canvas yet) ── #}
+      <div class="feed-waveform-shell"></div>
 
-.feed-card-img {
-  position: absolute;
-  inset: 0;
-}
+      <div class="feed-transport-dock" id="transport-{{ beat.id }}" data-beat-id="{{ beat.id }}">
+        <div class="feed-transport-row">
+          <button type="button" class="feed-transport-btn" data-action="restart" data-beat-id="{{ beat.id }}" aria-label="Restart track">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </button>
+          <button type="button" class="feed-transport-btn feed-transport-skip" data-action="back15" data-beat-id="{{ beat.id }}" aria-label="Back 15 seconds">
+            <span class="feed-skip-label">−15</span>
+          </button>
+          <button type="button" class="feed-transport-btn primary" data-action="play-toggle" data-beat-id="{{ beat.id }}" aria-label="Play or pause">
+            <i class="bi bi-play-fill"></i>
+          </button>
+          <button type="button" class="feed-transport-btn feed-transport-skip" data-action="forward15" data-beat-id="{{ beat.id }}" aria-label="Forward 15 seconds">
+            <span class="feed-skip-label">+15</span>
+          </button>
+        </div>
 
-.feed-card-img-1 { background: linear-gradient(130deg, #1f1628 0%, #4f2a38 40%, #0e111a 100%); }
-.feed-card-img-2 { background: linear-gradient(130deg, #101b24 0%, #2f4b54 42%, #10141d 100%); }
-.feed-card-img-3 { background: linear-gradient(130deg, #1b1224 0%, #51305d 42%, #11131b 100%); }
+        <div class="feed-transport-sliders">
+          <div class="feed-transport-slider-block">
+            <div class="feed-transport-labels">
+              <span id="feed-player-time-{{ beat.id }}">0:00</span>
+              <span id="feed-player-duration-{{ beat.id }}">0:00</span>
+            </div>
+            <input type="range" class="feed-transport-seek" id="feed-player-seek-{{ beat.id }}" data-beat-id="{{ beat.id }}" min="0" max="100" value="0" step="0.1" />
+          </div>
 
-.feed-card-overlay {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 2%, rgba(0,0,0,0.44) 100%);
-}
+          <div class="feed-transport-slider-block">
+            <div class="feed-transport-labels">
+              <span><i class="bi bi-volume-down"></i> Volume</span>
+              <span id="feed-player-volume-value-{{ beat.id }}">50%</span>
+            </div>
+            <input type="range" class="feed-transport-volume" id="feed-player-volume-{{ beat.id }}" data-beat-id="{{ beat.id }}" min="0" max="100" value="50" step="1" />
+          </div>
+        </div>
+      </div>
 
-.feed-wave-shell {
-  position: absolute;
-  left: 50%;
-  top: 52%;
-  transform: translate(-50%, -50%);
-  width: clamp(240px, 64vw, 980px);
-  height: clamp(140px, 26vh, 320px);
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.02) 55%, rgba(0, 0, 0, 0.2) 100%);
-}
+      {# ── RIGHT ACTION RAIL ── #}
+      <div class="feed-rail">
 
-.feed-wave-canvas { width: 100%; height: 100%; }
+        {# Producer avatar + follow #}
+        <div class="feed-rail-avatar-wrap">
+          <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="feed-rail-avatar" title="{{ beat.producer.username }}">
+            {% if beat.producer.avatar_url %}
+              <img src="{{ beat.producer.avatar_url }}" alt="{{ beat.producer.username }}" />
+            {% else %}
+              {{ beat.producer.username[0].upper() }}
+            {% endif %}
+          </a>
+          <button class="feed-follow-btn {% if is_following_map.get(beat.producer_id) %}is-following{% endif %}"
+                  data-producer-id="{{ beat.producer_id }}"
+                  aria-label="Follow {{ beat.producer.username }}">
+            <i class="bi {% if is_following_map.get(beat.producer_id) %}bi-check-lg{% else %}bi-plus-lg{% endif %}"></i>
+          </button>
+        </div>
 
-.feed-side-panel {
-  position: absolute;
-  right: 18px;
-  bottom: 16px;
-  width: 176px;
-  z-index: 30;
-  background: rgba(13,13,20,.74);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 14px;
-  padding: 10px;
-}
+        {# Like #}
+        <div class="feed-rail-item">
+          <button class="feed-rail-btn feed-like-btn {% if is_liked_map.get(beat.id) %}is-liked{% endif %}"
+                  data-beat-id="{{ beat.id }}" aria-label="Like this beat">
+            <i class="bi {% if is_liked_map.get(beat.id) %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+          </button>
+          <span class="feed-rail-count" id="likes-count-{{ beat.id }}">{{ beat.likes_count | format_num }}</span>
+        </div>
 
-.feed-producer {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px;
-  align-items: center;
-  margin-bottom: 10px;
-}
+        {# Comment #}
+        <div class="feed-rail-item">
+          <button class="feed-rail-btn feed-comment-btn"
+                  data-beat-id="{{ beat.id }}" aria-label="View comments">
+            <i class="bi bi-chat-dots-fill"></i>
+          </button>
+          <span class="feed-rail-count" id="comments-count-{{ beat.id }}">{{ beat.comment_count | format_num }}</span>
+        </div>
 
-.feed-producer-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,.16);
-  background: rgba(255,255,255,.08);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 700;
-}
+        {# Plays #}
+        <div class="feed-rail-item">
+          <div class="feed-rail-btn feed-rail-plays">
+            <i class="bi bi-play-circle-fill"></i>
+          </div>
+          <span class="feed-rail-count" id="plays-count-{{ beat.id }}">{{ beat.play_count | format_num }}</span>
+        </div>
 
-.feed-producer-name { display: block; font-size: 11px; font-weight: 700; }
-.feed-producer-genre { display: block; font-size: 10px; color: var(--ts-text-muted); }
+      </div>{# /feed-rail #}
 
-.feed-producer-info-btn,
-.btn-follow {
-  grid-column: 1 / -1;
-  width: 100%;
-  font-size: 11px;
-}
+      {# ── BOTTOM-LEFT INFO ── #}
+      <div class="feed-info">
+        <a href="{{ url_for('main.profile', user_id=beat.producer_id) }}" class="feed-producer-handle">
+          @{{ beat.producer.username }}
+        </a>
+        <h2 class="feed-beat-title">{{ beat.title }}</h2>
+        <div class="feed-tags">
+          {% if beat.genre %}<span class="feed-tag">{{ beat.genre }}</span>{% endif %}
+          {% if beat.bpm %}<span class="feed-tag">{{ beat.bpm }} BPM</span>{% endif %}
+          {% if beat.key %}<span class="feed-tag">{{ beat.key }}</span>{% endif %}
+          {% if beat.mood_tag %}<span class="feed-tag feed-tag-mood">{{ beat.mood_tag }}</span>{% endif %}
+        </div>
+        {# 3-tier pricing panel — compact inline version on the feed card #}
+        <div class="feed-pricing-panel">
+          <div class="feed-pricing-tier {% if not beat.premium_price and not beat.exclusive_price %}feed-pricing-tier-solo{% endif %}">
+            <span class="feed-pricing-label">Lease</span>
+            <span class="feed-pricing-value">
+              {% if beat.price == 0 %}FREE{% else %}${{ "%.0f"|format(beat.price) }}{% endif %}
+            </span>
+          </div>
+          {% if beat.premium_price %}
+          <div class="feed-pricing-tier">
+            <span class="feed-pricing-label">Premium</span>
+            <span class="feed-pricing-value">${{ "%.0f"|format(beat.premium_price) }}</span>
+          </div>
+          {% endif %}
+          {% if beat.exclusive_price %}
+          <div class="feed-pricing-tier feed-pricing-excl">
+            <span class="feed-pricing-label">Exclusive</span>
+            <span class="feed-pricing-value">${{ "%.0f"|format(beat.exclusive_price) }}</span>
+          </div>
+          {% endif %}
+        </div>
 
-.btn-follow {
-  border: 1px solid var(--ts-orange-border);
-  background: var(--ts-orange-dim);
-  color: var(--ts-orange-light);
-  border-radius: 10px;
-  padding: 7px 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-}
+        {# Details & Purchase ghost button — links to full beat detail page #}
+        <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}"
+           class="feed-ghost-btn">
+          <i class="bi bi-info-circle"></i> Details &amp; Purchase
+        </a>
+      </div>
 
-.feed-beats-meta {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  margin-bottom: 10px;
-}
+      {# ── COMMENTS DRAWER (slides up from bottom) ── #}
+      <div class="feed-drawer" id="drawer-{{ beat.id }}" data-beat-id="{{ beat.id }}">
+        <div class="feed-drawer-header">
+          <span class="feed-drawer-title">Comments</span>
+          <button class="feed-drawer-close" data-beat-id="{{ beat.id }}">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+        <div class="feed-drawer-list" id="drawer-list-{{ beat.id }}">
+          <div class="feed-drawer-loading"><i class="bi bi-arrow-repeat"></i> Loading…</div>
+        </div>
+        <div class="feed-drawer-input-row">
+          {% if current_user.is_authenticated %}
+            <input type="text" class="feed-drawer-input"
+                   placeholder="Add a comment…"
+                   data-beat-id="{{ beat.id }}"
+                   maxlength="500" />
+            <button class="feed-drawer-send" data-beat-id="{{ beat.id }}">
+              <i class="bi bi-send-fill"></i>
+            </button>
+          {% else %}
+            <a href="{{ url_for('main.login') }}" class="feed-drawer-login-prompt">
+              <i class="bi bi-person-circle"></i> Sign in to comment
+            </a>
+          {% endif %}
+        </div>
+      </div>
 
-.feed-meta-item {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.1);
-  border-radius: 8px;
-  padding: 5px;
-  text-align: center;
-}
+    </div>{# /feed-card #}
+    {% endfor %}
 
-.feed-meta-label {
-  display: block;
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--ts-text-muted);
-}
+    {# Load more sentinel #}
+    <div class="feed-load-more-sentinel" id="feed-load-sentinel"></div>
 
-.feed-meta-value {
-  display: block;
-  font-size: 11px;
-  font-weight: 700;
-}
+  </div>{# /feed-scroll #}
 
-.feed-stats { display: grid; gap: 8px; }
-.feed-stat-item { display: flex; gap: 6px; align-items: center; font-size: 10px; }
-.feed-stat-icon { color: var(--ts-orange-light); }
-.feed-stat-value { font-weight: 700; }
-.feed-stat-label { color: var(--ts-text-muted); }
+</div>{# /feed-root #}
+{% endblock %}
 
-.feed-info-overlay {
-  position: absolute;
-  left: 20px;
-  right: 210px;
-  bottom: 18px;
-  z-index: 25;
-  background: rgba(13,13,20,.68);
-  border: 1px solid rgba(255,255,255,.14);
-  border-radius: 16px;
-  padding: 14px;
-}
-
-.feed-title { font-size: clamp(1.3rem, 3.2vw, 2.2rem); margin-bottom: 6px; }
-.feed-description { color: var(--ts-text-secondary); font-size: 13px; line-height: 1.45; margin-bottom: 10px; }
-
-.feed-overlay-bottom {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.feed-prices { display: grid; gap: 4px; }
-.feed-price-heading { font-size: 10px; text-transform: uppercase; letter-spacing: .07em; color: var(--ts-text-muted); margin-bottom: 2px; }
-.feed-price-item { display: flex; gap: 7px; align-items: center; font-size: 12px; }
-.feed-price-label { color: var(--ts-text-muted); }
-.feed-price-value { color: var(--ts-orange-light); font-weight: 700; }
-
-.feed-ghost-btn {
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.08);
-  color: var(--ts-text-primary);
-  border-radius: 10px;
-  padding: 9px 12px;
-  font-size: 12px;
-}
-
-.feed-details-btn { width: auto; min-width: 146px; }
-</style>
+{% block extra_js %}
+<script>
+  {# Server-side config object read by feed.js on page load.
+     isAuthenticated — controls whether like/follow/comment redirect to login.
+     csrfToken       — injected into every AJAX request as X-CSRFToken header.
+     seenIds         — IDs already rendered; sent to /api/feed?seen=... so the
+                       algorithm never returns a beat the user has already seen.
+     nextPage        — starts at 2 because page 1 was rendered server-side.
+     hasMore         — flag used by the infinite scroll observer to stop fetching. #}
+  window.FEED_CONFIG = {
+    isAuthenticated: {{ 'true' if current_user.is_authenticated else 'false' }},
+    csrfToken: "{{ csrf_token() }}",
+    seenIds: [{% for beat in beats %}{{ beat.id }}{% if not loop.last %},{% endif %}{% endfor %}],
+    nextPage: 2,
+    hasMore: true,
+  };
+</script>
+{# feed.js: IntersectionObserver, audio playback, AJAX interactions, infinite scroll #}
+<script src="{{ url_for('static', filename='js/feed.js') }}"></script>
 {% endblock %}

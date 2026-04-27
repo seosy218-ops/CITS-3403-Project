@@ -1,38 +1,106 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <!-- Core document metadata and responsive viewport settings. -->
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  {# CSRF token in a meta tag so feed.js can read it for AJAX requests without embedding it per-form #}
+  <meta name="csrf-token" content="{{ csrf_token() }}" />
+
   <title>{% block title %}TuneFeed{% endblock %}</title>
 
-  <!-- Shared font loading for consistent typography across pages. -->
+  {# Google Fonts: DM Sans loaded with optical-size axis for crisp weight rendering #}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet" />
+
+  {# Bootstrap 5 CSS for grid, utilities, and component base #}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+
+  {# Bootstrap Icons used throughout the UI (play, heart, chat, etc.) #}
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
 
-  <!-- Global stylesheet and page-level style extension block. -->
+  {# Global TuneFeed design tokens and shared component styles #}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tunefeed.css') }}" />
+
+  {# Page-specific CSS injected here by child templates #}
   {% block extra_css %}{% endblock %}
 </head>
 <body>
-  <!-- Primary navigation shared by authentication and discover pages. -->
-  <header class="top-nav d-flex align-items-center justify-content-between">
-    <a href="{{ url_for('discover') }}" class="brand">TuneFeed</a>
-    <nav class="top-nav-links d-flex align-items-center gap-3">
-      <a href="{{ url_for('feed') }}">Listen</a>
-      <a href="{{ url_for('discover') }}">Discover</a>
-      <a href="{{ url_for('login') }}">Sign In</a>
-      <a href="{{ url_for('register') }}">Join</a>
-    </nav>
+
+  {# ── Top navigation bar ── #}
+  <header class="top-nav">
+    <div class="top-nav-left">
+      <a href="{{ url_for('main.discover') }}" class="brand">TuneFeed</a>
+
+      <nav class="top-nav-links d-flex align-items-center gap-3">
+        <a href="{{ url_for('main.feed') }}" {% if request.endpoint == 'main.feed' %}class="active"{% endif %}>Listen</a>
+        <a href="{{ url_for('main.discover') }}" {% if request.endpoint == 'main.discover' %}class="active"{% endif %}>Discover</a>
+      </nav>
+    </div>
+
+    <div class="top-nav-right">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.upload') }}" class="top-nav-upload-btn">Upload</a>
+
+        <div class="dropdown nav-profile-dropdown">
+          <button class="nav-profile-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span class="nav-profile-avatar">
+              {% if current_user.avatar_url %}
+                <img src="{{ current_user.avatar_url }}" alt="{{ current_user.username }}" />
+              {% else %}
+                {{ current_user.username[0].upper() }}
+              {% endif %}
+            </span>
+            <span class="nav-profile-meta">
+              <span class="nav-profile-name">{{ current_user.username }}</span>
+              <span class="nav-profile-sub">Profile</span>
+            </span>
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end nav-profile-menu">
+            <li class="nav-profile-header">
+              <div class="nav-profile-header-avatar">
+                {% if current_user.avatar_url %}
+                  <img src="{{ current_user.avatar_url }}" alt="{{ current_user.username }}" />
+                {% else %}
+                  {{ current_user.username[0].upper() }}
+                {% endif %}
+              </div>
+              <div>
+                <div class="nav-profile-header-name">{{ current_user.username }}</div>
+                <div class="nav-profile-header-sub">@{{ current_user.username }}</div>
+              </div>
+            </li>
+            <li><a class="dropdown-item" href="{{ url_for('main.profile', user_id=current_user.id) }}"><i class="bi bi-person-circle"></i> View Profile</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('main.edit_profile') }}"><i class="bi bi-sliders"></i> Edit Profile</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item nav-signout" href="{{ url_for('main.logout') }}"><i class="bi bi-box-arrow-right"></i> Sign Out</a></li>
+          </ul>
+        </div>
+      {% else %}
+        <a href="{{ url_for('main.login') }}" class="top-nav-auth-link">Sign In</a>
+        <a href="{{ url_for('main.register') }}" class="top-nav-join-btn">Join</a>
+      {% endif %}
+    </div>
   </header>
 
-  <!-- Main content injection point for child templates. -->
+  {# ── Flash messages ── #}
+  {# with_categories=true returns (category, message) tuples; category maps to CSS modifier class #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="ts-flash ts-flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  {# ── Main content ── #}
+  {# full_page block used instead of a standard content block so the feed can take over 100% viewport #}
   {% block full_page %}{% endblock %}
 
+  {# Bootstrap JS bundle (includes Popper) loaded at end of body for performance #}
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  {# Page-specific scripts injected here by child templates #}
   {% block extra_js %}{% endblock %}
 </body>
 </html>
