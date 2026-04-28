@@ -59,6 +59,7 @@ def feed():
             'producer_avatar':     producer.avatar_url if producer else '',
             'audio_url':           b.audio_url or '',
             'is_liked':            current_user.has_liked(b) if current_user.is_authenticated else False,
+            'is_saved':            current_user.has_saved(b) if current_user.is_authenticated else False,
             'is_following':        (current_user.is_following(producer)
                                     if current_user.is_authenticated and producer else False),
             'is_trending':         b.is_trending,
@@ -71,8 +72,25 @@ def feed():
 # Beat interactions
 # ---------------------------------------------------------------------------
 
+@api.route('/beats/<int:beat_id>/save', methods=['POST'])
+def toggle_save(beat_id):
+    """Toggle the saved/bookmark state for `beat_id`. Returns {'saved': bool}."""
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Authentication required'}), 401
+    beat = Beat.query.get_or_404(beat_id)
+    if current_user.has_saved(beat):
+        current_user.unsave_beat(beat)
+        saved = False
+    else:
+        current_user.save_beat(beat)
+        saved = True
+    db.session.commit()
+    return jsonify({'saved': saved})
+
+
 @api.route('/beats/<int:beat_id>/like', methods=['POST'])
 def toggle_like(beat_id):
+    """Toggle the like state for `beat_id`. Returns {'liked': bool, 'likes_count': int}."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Authentication required'}), 401
     beat = Beat.query.get_or_404(beat_id)
@@ -124,6 +142,7 @@ def record_play(beat_id):
 
 @api.route('/producers/<int:producer_id>/follow', methods=['POST'])
 def toggle_follow(producer_id):
+    """Toggle follow state for `producer_id`. Returns {'following': bool, 'followers_count': int}."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Authentication required'}), 401
     producer = User.query.get_or_404(producer_id)
@@ -150,10 +169,12 @@ def _serialize_comment(comment):
 
     is_liked    = False
     is_disliked = False
+    is_reported = False
     can_delete  = False
     if current_user.is_authenticated:
         is_liked    = current_user.has_liked_comment(comment)
         is_disliked = current_user.has_disliked_comment(comment)
+        is_reported = current_user.has_reported_comment(comment)
         can_delete  = current_user.id == comment.author_id  # only the author can delete
 
     # Resolve the username being replied to (for the "↩ @username" display)
@@ -173,6 +194,7 @@ def _serialize_comment(comment):
         'dislikes_count': comment.dislikes_count,
         'is_liked':       is_liked,
         'is_disliked':    is_disliked,
+        'is_reported':    is_reported,
         'can_delete':     can_delete,
         'parent_id':      comment.parent_id,
         'reply_to':       reply_to,
@@ -234,6 +256,7 @@ def post_comment(beat_id):
 
 @api.route('/comments/<int:comment_id>/like', methods=['POST'])
 def toggle_comment_like(comment_id):
+    """Toggle like on a comment. Removes any dislike first (mutually exclusive)."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Authentication required'}), 401
     comment = Comment.query.get_or_404(comment_id)
@@ -250,6 +273,7 @@ def toggle_comment_like(comment_id):
 
 @api.route('/comments/<int:comment_id>/dislike', methods=['POST'])
 def toggle_comment_dislike(comment_id):
+    """Toggle dislike on a comment. Removes any like first (mutually exclusive). Client hides the comment on dislike."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Authentication required'}), 401
     comment = Comment.query.get_or_404(comment_id)
@@ -287,8 +311,26 @@ def report_comment(comment_id):
     return jsonify({'reported': True, 'report_count': comment.report_count})
 
 
+@api.route('/comments/<int:comment_id>/report', methods=['DELETE'])
+def unreport_comment(comment_id):
+    """Undo a previous report by the current user. Decrements the comment's report count."""
+    if not current_user.is_authenticated:
+        return jsonify({'error': 'Authentication required'}), 401
+    report = CommentReport.query.filter_by(
+        comment_id=comment_id, user_id=current_user.id
+    ).first()
+    if not report:
+        return jsonify({'error': 'Report not found'}), 404
+    comment = Comment.query.get_or_404(comment_id)
+    comment.report_count = max(0, comment.report_count - 1)
+    db.session.delete(report)
+    db.session.commit()
+    return jsonify({'reported': False})
+
+
 @api.route('/comments/<int:comment_id>', methods=['DELETE'])
 def delete_comment(comment_id):
+    """Permanently delete a comment. Only the comment's author is allowed."""
     if not current_user.is_authenticated:
         return jsonify({'error': 'Authentication required'}), 401
     comment = Comment.query.get_or_404(comment_id)

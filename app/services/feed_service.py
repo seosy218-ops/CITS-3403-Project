@@ -18,12 +18,14 @@ def _get_user_context(user):
     """Return (liked_genres, followed_producer_ids) for personalisation."""
     liked_genres, followed_ids = set(), set()
     if user.is_authenticated:
-        for like in user.likes.all():
-            beat = Beat.query.get(like.beat_id)
-            if beat and beat.genre:
-                liked_genres.add(beat.genre.lower())
-        for followed in user.following.all():
-            followed_ids.add(followed.id)
+        from app.models import Like
+        rows = (Beat.query
+                .with_entities(Beat.genre)
+                .join(Like, Like.beat_id == Beat.id)
+                .filter(Like.user_id == user.id, Beat.genre.isnot(None))
+                .all())
+        liked_genres = {row[0].lower() for row in rows}
+        followed_ids = {u.id for u in user.following.all()}
     return liked_genres, followed_ids
 
 
