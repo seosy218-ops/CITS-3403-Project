@@ -1,8 +1,9 @@
+import os
 from app import create_app
 
-# Instantiate the Flask application using the app factory.
 app = create_app()
 
 if __name__ == "__main__":
-    # Run the local development server with debug tools enabled.
-    app.run(debug=True)
+    debug = os.getenv('FLASK_DEBUG', 'false').lower() == 'true'
+    port  = int(os.getenv('PORT', 5002))
+    app.run(debug=debug, port=port)
