@@ -23,6 +23,7 @@
 
     <form method="POST" action="{{ url_for('main.login') }}" class="ts-validate needs-validation" novalidate
           role="form" aria-label="Sign in to TuneFeed">
+      {{ form.hidden_tag() }}
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
         <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
