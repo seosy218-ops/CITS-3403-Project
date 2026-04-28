@@ -16,7 +16,7 @@
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
     <!-- POST form for collecting initial account details. -->
-    <form method="POST" action="{{ url_for('register') }}" class="ts-validate needs-validation" novalidate>
+    <form method="POST" action="{{ url_for('main.register') }}" class="ts-validate needs-validation" novalidate>
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
         <input id="username" name="username" type="text" class="ts-input" placeholder="producername" required />
@@ -51,7 +51,7 @@
     <!-- Return path for existing users. -->
     <div class="auth-switch">
       Already have an account?
-      <a href="{{ url_for('login') }}" class="auth-switch-link">Sign In</a>
+      <a href="{{ url_for('main.login') }}" class="auth-switch-link">Sign In</a>
     </div>
   </div>
 </div>
