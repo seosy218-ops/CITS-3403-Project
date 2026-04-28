@@ -49,8 +49,10 @@
       <div class="feed-bg feed-bg-{{ bg_index }}"></div>
       <div class="feed-vignette"></div>
 
-      {# ── WAVEFORM SHELL (visual centrepiece — no canvas yet) ── #}
-      <div class="feed-waveform-shell"></div>
+      {# ── WAVEFORM (center visual) ── #}
+      <div class="feed-waveform-shell">
+        <canvas class="feed-waveform-canvas" id="waveform-{{ beat.id }}"></canvas>
+      </div>
 
       <div class="feed-transport-dock" id="transport-{{ beat.id }}" data-beat-id="{{ beat.id }}">
         <div class="feed-transport-row">
@@ -66,6 +68,14 @@
           <button type="button" class="feed-transport-btn feed-transport-skip" data-action="forward15" data-beat-id="{{ beat.id }}" aria-label="Forward 15 seconds">
             <span class="feed-skip-label">+15</span>
           </button>
+          <div class="feed-bpm-control" data-beat-id="{{ beat.id }}">
+            <button type="button" class="feed-bpm-toggle-btn" data-action="bpm-toggle" data-beat-id="{{ beat.id }}" aria-label="Open BPM controls">BPM</button>
+            <div class="feed-bpm-btn-group" data-beat-id="{{ beat.id }}">
+              <button type="button" class="feed-bpm-adj" data-action="bpm-down" data-beat-id="{{ beat.id }}" aria-label="Decrease BPM">−</button>
+              <span class="feed-bpm-display" id="feed-bpm-label-{{ beat.id }}" title="Click to edit BPM">{{ beat.bpm }} BPM</span>
+              <button type="button" class="feed-bpm-adj" data-action="bpm-up" data-beat-id="{{ beat.id }}" aria-label="Increase BPM">+</button>
+            </div>
+          </div>
         </div>
 
         <div class="feed-transport-sliders">
@@ -122,6 +132,14 @@
             <i class="bi bi-chat-dots-fill"></i>
           </button>
           <span class="feed-rail-count" id="comments-count-{{ beat.id }}">{{ beat.comment_count | format_num }}</span>
+        </div>
+
+        {# Save / Library #}
+        <div class="feed-rail-item">
+          <button class="feed-rail-btn feed-save-btn {% if is_saved_map.get(beat.id) %}is-saved{% endif %}"
+                  data-beat-id="{{ beat.id }}" aria-label="Save this beat">
+            <i class="bi {% if is_saved_map.get(beat.id) %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i>
+          </button>
         </div>
 
         {# Plays #}
@@ -212,6 +230,56 @@
   </div>{# /feed-scroll #}
 
 </div>{# /feed-root #}
+
+{# ── REPORT MODAL — single shared overlay, controlled by feed.js ── #}
+<div class="report-modal-overlay" id="report-modal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="report-modal-heading">
+  <div class="report-modal-panel">
+    <div class="report-modal-header">
+      <span class="report-modal-title" id="report-modal-heading">Report comment</span>
+      <button class="report-modal-close" id="report-modal-close" aria-label="Close">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    {# Reason-select view #}
+    <div id="report-modal-body-select">
+      <p class="report-modal-desc">Why are you reporting this?</p>
+      <div class="report-reason-list">
+        <button class="report-reason-btn" data-reason="spam">
+          <i class="bi bi-megaphone"></i> Spam
+        </button>
+        <button class="report-reason-btn" data-reason="hate">
+          <i class="bi bi-emoji-angry"></i> Hateful content
+        </button>
+        <button class="report-reason-btn" data-reason="inappropriate">
+          <i class="bi bi-exclamation-circle"></i> Inappropriate
+        </button>
+        <button class="report-reason-btn" data-reason="harassment">
+          <i class="bi bi-person-x"></i> Harassment
+        </button>
+        <button class="report-reason-btn" data-reason="other">
+          <i class="bi bi-three-dots"></i> Other
+        </button>
+      </div>
+    </div>
+
+    {# Confirmation view — shown after successful report #}
+    <div id="report-modal-body-done" style="display:none">
+      <div class="report-modal-done">
+        <i class="bi bi-flag-fill report-modal-done-icon"></i>
+        <p class="report-modal-done-text">Thanks for letting us know.</p>
+        <p class="report-modal-done-sub">We'll review this comment and take action if it violates our guidelines.</p>
+        <button class="report-unreport-btn" id="report-unreport-btn">
+          <i class="bi bi-arrow-counterclockwise"></i> Undo report
+        </button>
+      </div>
+    </div>
+
+    <div class="report-modal-footer">
+      <button class="report-modal-cancel" id="report-modal-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -231,6 +299,6 @@
     hasMore: true,
   };
 </script>
-{# feed.js: IntersectionObserver, audio playback, AJAX interactions, infinite scroll #}
+{# feed.js: waveform visualiser, IntersectionObserver, AJAX interactions, infinite scroll #}
 <script src="{{ url_for('static', filename='js/feed.js') }}"></script>
 {% endblock %}

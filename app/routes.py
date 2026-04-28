@@ -1,13 +1,16 @@
+import logging
 import os
 import random
 from secrets import token_hex
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 from werkzeug.utils import secure_filename
+
+logger = logging.getLogger(__name__)
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms import SignupForm, LoginForm, UploadBeatForm, SearchForm, EditProfileForm
-from app.models import db, User, Beat
+from app.models import db, User, Beat, Like, saved_beats, follows
 from app.services.feed_service import get_feed_beats
 
 main = Blueprint('main', __name__)
@@ -79,8 +82,12 @@ def login():
         if user and user.check_password(form.password.data):
             login_user(user)
             flash('Logged in successfully.', 'success')
-            next_page = request.args.get('next')
+            next_page = request.args.get('next', '')
+            # Guard against open-redirect: only allow relative URLs (no scheme or netloc)
+            if next_page and urlsplit(next_page).netloc:
+                next_page = ''
             return redirect(next_page or url_for('main.feed'))
+        logger.warning('Failed login attempt for email: %s', form.email.data)
         flash('Invalid email or password.', 'danger')
     return render_template('auth/login.html', form=form)
 
@@ -154,23 +161,42 @@ def feed():
     beats = get_feed_beats(current_user, limit=15)
 
     is_liked_map     = {}
+    is_saved_map     = {}
     is_following_map = {}
     if current_user.is_authenticated:
-        is_liked_map = {b.id: current_user.has_liked(b) for b in beats}
-        seen_producers = {}
-        for b in beats:
-            pid = b.producer_id
-            # Cache producer rows so repeated beats by the same producer do not
-            # trigger duplicate queries while building follow-state for the view.
-            if pid not in seen_producers:
-                seen_producers[pid] = User.query.get(pid)
-            p = seen_producers[pid]
-            if p and pid not in is_following_map:
-                is_following_map[pid] = current_user.is_following(p)
+        beat_ids = [b.id for b in beats]
+        # Batch-load liked and saved states in two queries instead of 2*N
+        liked_ids = {
+            row[0] for row in
+            db.session.query(Like.beat_id)
+            .filter(Like.user_id == current_user.id, Like.beat_id.in_(beat_ids))
+            .all()
+        }
+        saved_ids = {
+            row[0] for row in
+            db.session.query(saved_beats.c.beat_id)
+            .filter(saved_beats.c.user_id == current_user.id,
+                    saved_beats.c.beat_id.in_(beat_ids))
+            .all()
+        }
+        is_liked_map = {bid: bid in liked_ids for bid in beat_ids}
+        is_saved_map = {bid: bid in saved_ids for bid in beat_ids}
+
+        # Batch-load follow state for unique producers on this page
+        producer_ids = list({b.producer_id for b in beats if b.producer_id})
+        following_ids = {
+            row[0] for row in
+            db.session.query(follows.c.followed_id)
+            .filter(follows.c.follower_id == current_user.id,
+                    follows.c.followed_id.in_(producer_ids))
+            .all()
+        }
+        is_following_map = {pid: pid in following_ids for pid in producer_ids}
 
     return render_template('main/feed.html',
                            beats=beats,
                            is_liked_map=is_liked_map,
+                           is_saved_map=is_saved_map,
                            is_following_map=is_following_map)
 
 
@@ -207,12 +233,22 @@ def profile(user_id):
     beats = user.beats.order_by(Beat.uploaded_at.desc()).paginate(page=page, per_page=12)
     is_following = current_user.is_following(user) if current_user.is_authenticated else False
 
-    # Aggregate stats computed once here so the template doesn't trigger N+1 queries
-    all_beats = user.beats.all()
-    total_plays = sum(b.play_count for b in all_beats)
-    total_likes = sum(b.likes_count for b in all_beats)
+    # Aggregate stats via SQL to avoid N+1 per-beat count queries
+    total_plays = (db.session.query(db.func.coalesce(db.func.sum(Beat.play_count), 0))
+                   .filter(Beat.producer_id == user.id).scalar())
+    total_likes = (db.session.query(db.func.count(Like.id))
+                   .join(Beat, Beat.id == Like.beat_id)
+                   .filter(Beat.producer_id == user.id).scalar())
     followers_count = user.followers.count()
     following_count = user.following.count()
+
+    # Saved beats — only shown on the user's own profile page
+    saved_beats_page = None
+    if current_user.is_authenticated and current_user.id == user.id:
+        saved_pg = request.args.get('saved_page', 1, type=int)
+        saved_beats_page = current_user.saved.order_by(Beat.uploaded_at.desc()).paginate(
+            page=saved_pg, per_page=12
+        )
 
     return render_template('main/profile.html',
                            user=user,
@@ -221,7 +257,8 @@ def profile(user_id):
                            total_plays=total_plays,
                            total_likes=total_likes,
                            followers_count=followers_count,
-                           following_count=following_count)
+                           following_count=following_count,
+                           saved_beats_page=saved_beats_page)
 
 
 @main.route('/profile/edit', methods=['GET', 'POST'])

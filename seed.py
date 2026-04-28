@@ -259,6 +259,8 @@ def seed():
             ]
             audio_url = CORS_AUDIO[BEATS.index(row) % len(CORS_AUDIO)]
             cover_url = f"https://api.dicebear.com/9.x/shapes/svg?seed={title.replace(' ', '')}"
+            # Keep baseline play counts low so scroll-triggered increments are visible in demos.
+            seeded_plays = random.randint(8, 18)
 
             beat = Beat(
                 title=title,
@@ -271,7 +273,7 @@ def seed():
                 price=price,
                 premium_price=premium_price,
                 exclusive_price=exclusive_price,
-                play_count=plays,
+                play_count=seeded_plays,
                 is_trending=is_trending,
                 uploaded_at=uploaded,
                 producer_id=producer_objs[prod_idx].id,

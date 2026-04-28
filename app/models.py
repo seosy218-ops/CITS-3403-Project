@@ -24,10 +24,14 @@ comment_dislikes = db.Table('comment_dislikes',
     db.Column('comment_id', db.Integer, db.ForeignKey('comment.id'), primary_key=True),
 )
 
+saved_beats = db.Table('saved_beats',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'), primary_key=True),
+    db.Column('beat_id', db.Integer, db.ForeignKey('beat.id'), primary_key=True),
+)
+
 
 # ---------------------------------------------------------------------------
 # User
-# `role` is retained for compatibility; current routes treat all users the same.
 # ---------------------------------------------------------------------------
 
 class User(UserMixin, db.Model):
@@ -53,6 +57,11 @@ class User(UserMixin, db.Model):
     disliked_comments = db.relationship(
         'Comment', secondary=comment_dislikes,
         backref=db.backref('dislikers', lazy='dynamic'), lazy='dynamic',
+    )
+    saved = db.relationship(
+        'Beat', secondary=saved_beats,
+        backref=db.backref('savers', lazy='dynamic'),
+        lazy='dynamic',
     )
     following = db.relationship(
         'User', secondary=follows,
@@ -136,6 +145,28 @@ class User(UserMixin, db.Model):
         if self.has_disliked_comment(comment):
             self.disliked_comments.remove(comment)
 
+    # ---- beat saves ----
+    def has_saved(self, beat):
+        """Return True if this user has saved `beat` to their library."""
+        return self.saved.filter(saved_beats.c.beat_id == beat.id).count() > 0
+
+    def save_beat(self, beat):
+        """Add `beat` to this user's saved library (idempotent)."""
+        if not self.has_saved(beat):
+            self.saved.append(beat)
+
+    def unsave_beat(self, beat):
+        """Remove `beat` from this user's saved library (idempotent)."""
+        if self.has_saved(beat):
+            self.saved.remove(beat)
+
+    # ---- comment reports ----
+    def has_reported_comment(self, comment):
+        """Return True if this user has already reported `comment`."""
+        return CommentReport.query.filter_by(
+            comment_id=comment.id, user_id=self.id
+        ).first() is not None
+
     def __repr__(self):
         return f'<User {self.username}>'
 
@@ -151,7 +182,7 @@ class Beat(db.Model):
     title        = db.Column(db.String(128), nullable=False)
     audio_url    = db.Column(db.String(256), nullable=False)
     cover_url    = db.Column(db.String(256), nullable=True)
-    genre        = db.Column(db.String(64),  nullable=True)
+    genre        = db.Column(db.String(64),  nullable=True,  index=True)
     bpm          = db.Column(db.Integer,     nullable=True)
     key          = db.Column(db.String(16),  nullable=True)
     mood_tag     = db.Column(db.String(64),  nullable=True)
@@ -160,10 +191,10 @@ class Beat(db.Model):
     price           = db.Column(db.Float, nullable=False, default=0.0)   # Basic Lease price
     premium_price   = db.Column(db.Float, nullable=True)                 # Premium License tier
     exclusive_price = db.Column(db.Float, nullable=True)                 # Exclusive Rights tier
-    play_count   = db.Column(db.Integer,     nullable=False, default=0)
+    play_count   = db.Column(db.Integer,     nullable=False, default=0,  index=True)
     is_trending  = db.Column(db.Boolean,     default=False)
-    uploaded_at  = db.Column(db.DateTime,    default=datetime.utcnow)
-    producer_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    uploaded_at  = db.Column(db.DateTime,    default=datetime.utcnow,   index=True)
+    producer_id  = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False, index=True)
 
     producer  = db.relationship('User',     back_populates='beats')
     likes     = db.relationship('Like',     back_populates='beat', lazy='dynamic', cascade='all, delete-orphan')
@@ -231,7 +262,7 @@ class Comment(db.Model):
     parent_id    = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
     body         = db.Column(db.Text,    nullable=False)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
-    report_count = db.Column(db.Integer,  default=0)  # incremented by report endpoint
+    report_count = db.Column(db.Integer,  default=0)  # total number of reports received; surfaces flagged content
 
     beat   = db.relationship('Beat', back_populates='comments', foreign_keys=[beat_id])
     author = db.relationship('User', foreign_keys=[author_id],

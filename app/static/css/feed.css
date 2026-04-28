@@ -162,9 +162,11 @@
 .feed-transport-dock {
   position: absolute;
   left: 50%;
-  top: calc(47% + (clamp(130px, 25vh, 280px) / 2) + 16px);
+  top: calc(47% + (clamp(130px, 25vh, 280px) / 2) + 26px);
   transform: translateX(-50%) translateY(10px);
   width: min(620px, calc(100vw - 36px));
+  /* Keep the transport stack centered and the two control bars visually aligned. */
+  --feed-transport-controls-width: min(460px, 100%);
   z-index: 6;
   opacity: 0;
   pointer-events: none;
@@ -180,7 +182,9 @@
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 12px;
+  /* Match the slider bar width so the whole dock reads as one clean block. */
+  width: var(--feed-transport-controls-width);
+  margin: 0 auto 12px;
   flex-wrap: wrap;
 }
 
@@ -237,10 +241,172 @@
   pointer-events: none;
 }
 
+/* ── BPM controller ─────────────────────────────────────────
+   Starts as a compact "BPM" button. When opened, it smoothly
+   expands into the existing − / value / + controls.
+   ─────────────────────────────────────────────────────────── */
+.feed-bpm-control {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 21px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(18,18,28,0.75);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: width 0.24s ease, border-color 0.24s ease, background 0.24s ease, transform 0.16s ease;
+}
+
+.feed-bpm-control.is-open {
+  width: 124px;
+  border-color: rgba(255,255,255,0.16);
+  background: rgba(18,18,28,0.75);
+}
+
+.feed-bpm-control.is-open:hover,
+.feed-bpm-control.is-open:focus-within {
+  /* Keep the open pill reading as one continuous surface instead of a changing frame. */
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.08);
+}
+
+.feed-bpm-toggle-btn {
+  position: absolute;
+  inset: 0;
+  border: none;
+  background: transparent;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.18s ease, transform 0.22s ease, color 0.18s ease;
+}
+
+.feed-bpm-toggle-btn:hover {
+  color: #fff;
+}
+
+.feed-bpm-control.is-open .feed-bpm-toggle-btn {
+  opacity: 0;
+  transform: translateX(-10px);
+  pointer-events: none;
+}
+
+.feed-bpm-btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  height: 42px;
+  border-radius: 21px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(18,18,28,0.75);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.feed-bpm-control .feed-bpm-btn-group {
+  position: absolute;
+  inset: 0;
+  justify-content: space-between;
+  border: none;
+  background: transparent;
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.24s ease;
+}
+
+.feed-bpm-control.is-open .feed-bpm-btn-group {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+.feed-bpm-adj {
+  width: 30px;
+  height: 100%;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feed-bpm-adj:hover {
+  background: rgba(245,158,11,0.18);
+  color: var(--ts-orange-light);
+}
+
+.feed-bpm-control.is-open .feed-bpm-adj:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+.feed-bpm-display {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ts-orange-light);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  padding: 0 2px;
+  min-width: 60px;
+  text-align: center;
+  cursor: pointer;
+  transition: color 0.14s;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 2px;
+}
+.feed-bpm-display:hover {
+  color: #fff;
+  text-decoration-color: rgba(245, 158, 11, 0.55);
+}
+
+.feed-bpm-control.is-open .feed-bpm-display:hover {
+  text-decoration-color: rgba(255,255,255,0.4);
+}
+
+/* Inline BPM number input — replaces the span when the user clicks to edit.
+   Styled to blend into the pill group seamlessly. */
+.feed-bpm-edit-input {
+  background: rgba(245, 158, 11, 0.10);
+  border: none;
+  border-radius: 0;
+  color: var(--ts-orange-light);
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  text-align: center;
+  width: 62px;
+  padding: 0 2px;
+  outline: none;
+  /* Remove browser number-input spinners */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.feed-bpm-edit-input::-webkit-outer-spin-button,
+.feed-bpm-edit-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .feed-transport-sliders {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(160px, 0.65fr);
+  grid-template-columns: 1fr 1fr;
   gap: 14px;
+  width: var(--feed-transport-controls-width);
+  margin: 0 auto;
   padding: 14px 16px;
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 18px;
@@ -268,10 +434,63 @@
   color: var(--ts-text-primary);
 }
 
+/* Custom range track + thumb — consistent across browsers */
 .feed-transport-seek,
 .feed-transport-volume {
   width: 100%;
-  accent-color: var(--ts-orange);
+  height: 4px;
+  cursor: pointer;
+  border-radius: 2px;
+  /* WebKit custom track */
+  -webkit-appearance: none;
+  appearance: none;
+  background: linear-gradient(to right,
+    var(--ts-orange) calc(var(--range-pct, 50%) * 1%),
+    rgba(255,255,255,0.18) calc(var(--range-pct, 50%) * 1%)
+  );
+  outline: none;
+  transition: background 0.1s;
+}
+
+.feed-transport-seek::-webkit-slider-thumb,
+.feed-transport-volume::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ts-orange);
+  box-shadow: 0 0 0 2px rgba(217,119,6,0.25), 0 2px 6px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.feed-transport-seek::-webkit-slider-thumb:hover,
+.feed-transport-volume::-webkit-slider-thumb:hover {
+  transform: scale(1.25);
+  box-shadow: 0 0 0 4px rgba(217,119,6,0.22), 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.feed-transport-seek::-moz-range-track,
+.feed-transport-volume::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.18);
+}
+.feed-transport-seek::-moz-range-progress,
+.feed-transport-volume::-moz-range-progress {
+  background: var(--ts-orange);
+  height: 4px;
+  border-radius: 2px;
+}
+.feed-transport-seek::-moz-range-thumb,
+.feed-transport-volume::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--ts-orange);
+  cursor: pointer;
 }
 
 /* ── Right action rail ──────────────────────────────────────
@@ -518,7 +737,8 @@
 .feed-pricing-excl .feed-pricing-value { color: #f59e0b; }
 
 /* ── Details & Purchase ghost button ────────────────────────
-   Matches the reference project's ghost button style.
+   Semi-transparent pill link leading to the beat's full detail
+   and purchase page; sits within the bottom-left info overlay.
    ─────────────────────────────────────────────────────────── */
 .feed-ghost-btn {
   display: inline-flex;
@@ -761,6 +981,208 @@
 .feed-empty h2   { font-size: 1.4rem; }
 .feed-empty p    { color: var(--ts-text-secondary); font-size: 14px; margin-bottom: 8px; }
 
+/* ── Save button ─────────────────────────────────────────────
+   Bookmark icon in the right action rail.
+   Turns orange-filled when a beat is saved.
+   ─────────────────────────────────────────────────────────── */
+.feed-save-btn.is-saved { color: var(--ts-orange-light); }
+.feed-save-btn.is-saved i { animation: pop-heart 0.3s ease; }
+
+/* ── Comment dislike-hide ────────────────────────────────────
+   When a user dislikes a comment the body is visually dimmed
+   and a "hidden" hint bar appears in its place.
+   ─────────────────────────────────────────────────────────── */
+.feed-comment-item.is-user-disliked .feed-comment-text,
+.feed-comment-item.is-user-disliked .feed-comment-actions,
+.feed-comment-item.is-user-disliked .feed-comment-reply-to,
+.feed-comment-item.is-user-disliked .feed-comment-replies {
+  display: none;
+}
+.feed-comment-item.is-user-disliked .feed-comment-author {
+  opacity: 0.35;
+}
+
+/* Hidden-hint row — always in the DOM, shown only when disliked */
+.feed-comment-dislike-hint {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--ts-text-muted);
+}
+.feed-comment-item.is-user-disliked .feed-comment-dislike-hint {
+  display: flex;
+}
+.feed-comment-show-btn {
+  background: none;
+  border: none;
+  color: var(--ts-orange);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.feed-comment-show-btn:hover { color: var(--ts-orange-light); }
+
+/* Report button — filled orange when already reported */
+.feed-comment-report-btn.is-reported { color: var(--ts-orange); }
+
+/* ── Report modal overlay ────────────────────────────────────
+   Full-screen frosted backdrop with centred panel.
+   .is-open class slides it into view.
+   ─────────────────────────────────────────────────────────── */
+.report-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;         /* sheet slides up from bottom — feels native on mobile */
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease;
+}
+.report-modal-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.report-modal-panel {
+  width: 100%;
+  max-width: 480px;
+  background: #1a1a2a;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px 20px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
+  transform: translateY(24px);
+  transition: transform 0.26s cubic-bezier(0.32,0.72,0,1);
+  overflow: hidden;
+}
+.report-modal-overlay.is-open .report-modal-panel {
+  transform: translateY(0);
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.report-modal-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ts-text-primary);
+}
+.report-modal-close {
+  background: none;
+  border: none;
+  color: var(--ts-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+}
+.report-modal-close:hover { color: var(--ts-text-primary); background: rgba(255,255,255,0.06); }
+
+.report-modal-desc {
+  font-size: 13px;
+  color: var(--ts-text-secondary);
+  padding: 14px 18px 8px;
+}
+
+.report-reason-list {
+  display: flex;
+  flex-direction: column;
+  padding: 0 12px 4px;
+}
+
+.report-reason-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-primary);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s;
+}
+.report-reason-btn i { font-size: 16px; color: var(--ts-text-secondary); width: 18px; }
+.report-reason-btn:hover { background: rgba(255,255,255,0.06); }
+.report-reason-btn:hover i { color: var(--ts-orange); }
+
+/* Done / confirmation view */
+.report-modal-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 24px 16px;
+  gap: 8px;
+}
+.report-modal-done-icon {
+  font-size: 2.2rem;
+  color: var(--ts-orange-light);
+}
+.report-modal-done-text {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ts-text-primary);
+}
+.report-modal-done-sub {
+  font-size: 12px;
+  color: var(--ts-text-secondary);
+  line-height: 1.5;
+}
+.report-unreport-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ts-text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s, border-color 0.15s;
+}
+.report-unreport-btn:hover { color: var(--ts-text-primary); border-color: rgba(255,255,255,0.25); }
+
+.report-modal-footer {
+  padding: 8px 18px 18px;
+  display: flex;
+  justify-content: center;
+}
+.report-modal-cancel {
+  background: none;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-muted);
+  cursor: pointer;
+  padding: 8px 20px;
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
+}
+.report-modal-cancel:hover { color: var(--ts-text-secondary); background: rgba(255,255,255,0.04); }
+
 /* ── Infinite scroll sentinel ───────────────────────────────
    1px invisible element at the end of the feed list.
    IntersectionObserver in feed.js watches this element;
@@ -770,28 +1192,63 @@
 
 /* ── Responsive adjustments ─────────────────────────────────
    Smaller font and tighter spacing on mobile viewports.
+   Key layout goal: waveform at 36% → transport → info stack
+   cleanly without overlapping on typical phone heights (≥568px).
    ─────────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
-  .feed-beat-title   { font-size: 1.2rem; }
-  .feed-waveform-shell { height: clamp(100px, 20vh, 200px); }
+  .feed-beat-title   { font-size: 1.1rem; }
+
+  /* Waveform sits higher so transport + info fit below it */
+  .feed-waveform-shell {
+    top: 36%;
+    height: clamp(90px, 18vh, 180px);
+  }
+
+  /* Recalculate transport position based on updated waveform */
   .feed-transport-dock {
-    top: calc(47% + (clamp(100px, 20vh, 200px) / 2) + 12px);
-    width: calc(100vw - 24px);
+    top: calc(36% + (clamp(90px, 18vh, 180px) / 2) + 16px);
+    width: calc(100vw - 20px);
+    --feed-transport-controls-width: 100%;
   }
+
+  /* Keep sliders side-by-side on mobile — stacking makes them too tall */
   .feed-transport-sliders {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 12px;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 10px 12px;
   }
-  .feed-transport-btn {
-    width: 40px;
-    height: 40px;
+
+  .feed-transport-btn { width: 38px; height: 38px; }
+  .feed-transport-btn i { font-size: 16px; }
+  .feed-transport-btn.primary { width: 46px; height: 46px; }
+  .feed-transport-row { gap: 8px; margin-bottom: 10px; }
+  .feed-bpm-control {
+    width: 38px;
+    height: 38px;
+    border-radius: 19px;
   }
-  .feed-transport-btn.primary {
-    width: 48px;
-    height: 48px;
+  .feed-bpm-control.is-open {
+    width: 118px;
   }
-  .feed-rail  { right: 10px; }
-  .feed-info  { right: 74px; }
-  .feed-drawer { height: 65%; }            /* taller drawer on small screens */
+
+  .feed-rail { right: 10px; gap: 12px; }
+  .feed-rail-btn { width: 40px; height: 40px; font-size: 18px; }
+  .feed-rail-avatar { width: 40px; height: 40px; font-size: 14px; }
+  .feed-info { right: 68px; bottom: 16px; }
+  .feed-drawer { height: 65%; }
+}
+
+/* On very small screens hide pricing / ghost btn to prevent info overflow */
+@media (max-width: 420px) {
+  .feed-pricing-panel { display: none; }
+  .feed-ghost-btn     { display: none; }
+  .feed-waveform-shell {
+    top: 33%;
+    height: clamp(80px, 15vh, 150px);
+  }
+  .feed-transport-dock {
+    top: calc(33% + (clamp(80px, 15vh, 150px) / 2) + 14px);
+    width: calc(100vw - 16px);
+  }
+  .feed-transport-labels { font-size: 9px; }
 }
