@@ -1,6 +1,7 @@
 from datetime import datetime
 from flask_login import UserMixin
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
@@ -41,7 +42,7 @@ class User(UserMixin, db.Model):
     username      = db.Column(db.String(64),  unique=True, nullable=False)
     email         = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role          = db.Column(db.String(16),  nullable=False, default='user')  # all users have same permissions
+    role          = db.Column(db.String(16),  nullable=False, default='user')
     bio           = db.Column(db.Text,        nullable=True)
     avatar_url    = db.Column(db.String(256), nullable=True)
     created_at    = db.Column(db.DateTime,    default=datetime.utcnow)
@@ -93,7 +94,7 @@ class User(UserMixin, db.Model):
 
     def is_following(self, user):
         """Return True when this user follows `user`."""
-        return self.following.filter(follows.c.followed_id == user.id).count() > 0
+        return self.following.filter(follows.c.followed_id == user.id).first() is not None
 
     def follower_count(self):
         return self.followers.count()
@@ -101,12 +102,17 @@ class User(UserMixin, db.Model):
     # ---- beat likes ----
     def has_liked(self, beat):
         """Return True if this user has liked `beat`."""
-        return self.likes.filter_by(beat_id=beat.id).count() > 0
+        return self.likes.filter_by(beat_id=beat.id).first() is not None
 
     def like_beat(self, beat):
         """Create a like edge if one does not already exist."""
         if not self.has_liked(beat):
-            db.session.add(Like(user_id=self.id, beat_id=beat.id))
+            try:
+                # Use a savepoint so a concurrent duplicate insert only rolls back this op
+                with db.session.begin_nested():
+                    db.session.add(Like(user_id=self.id, beat_id=beat.id))
+            except IntegrityError:
+                pass  # concurrent request already committed the same like
 
     def unlike_beat(self, beat):
         """Remove this user's like edge for `beat` if present."""
@@ -115,7 +121,7 @@ class User(UserMixin, db.Model):
     # ---- comment likes / dislikes ----
     def has_liked_comment(self, comment):
         """Return True if this user has liked `comment`."""
-        return self.liked_comments.filter(comment_likes.c.comment_id == comment.id).count() > 0
+        return self.liked_comments.filter(comment_likes.c.comment_id == comment.id).first() is not None
 
     def like_comment(self, comment):
         """Like `comment`, removing any existing dislike first (mutually exclusive)."""
@@ -131,7 +137,7 @@ class User(UserMixin, db.Model):
 
     def has_disliked_comment(self, comment):
         """Return True if this user has disliked `comment`."""
-        return self.disliked_comments.filter(comment_dislikes.c.comment_id == comment.id).count() > 0
+        return self.disliked_comments.filter(comment_dislikes.c.comment_id == comment.id).first() is not None
 
     def dislike_comment(self, comment):
         """Dislike `comment`, removing any existing like first (mutually exclusive)."""
@@ -148,7 +154,7 @@ class User(UserMixin, db.Model):
     # ---- beat saves ----
     def has_saved(self, beat):
         """Return True if this user has saved `beat` to their library."""
-        return self.saved.filter(saved_beats.c.beat_id == beat.id).count() > 0
+        return self.saved.filter(saved_beats.c.beat_id == beat.id).first() is not None
 
     def save_beat(self, beat):
         """Add `beat` to this user's saved library (idempotent)."""
@@ -188,9 +194,9 @@ class Beat(db.Model):
     mood_tag     = db.Column(db.String(64),  nullable=True)
     duration     = db.Column(db.String(10),  default='3:00')
     licence_type    = db.Column(db.String(64), nullable=True)
-    price           = db.Column(db.Float, nullable=False, default=0.0)   # Basic Lease price
-    premium_price   = db.Column(db.Float, nullable=True)                 # Premium License tier
-    exclusive_price = db.Column(db.Float, nullable=True)                 # Exclusive Rights tier
+    price           = db.Column(db.Float, nullable=False, default=0.0)
+    premium_price   = db.Column(db.Float, nullable=True)
+    exclusive_price = db.Column(db.Float, nullable=True)
     play_count   = db.Column(db.Integer,     nullable=False, default=0,  index=True)
     is_trending  = db.Column(db.Boolean,     default=False)
     uploaded_at  = db.Column(db.DateTime,    default=datetime.utcnow,   index=True)
@@ -262,7 +268,7 @@ class Comment(db.Model):
     parent_id    = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=True)
     body         = db.Column(db.Text,    nullable=False)
     created_at   = db.Column(db.DateTime, default=datetime.utcnow)
-    report_count = db.Column(db.Integer,  default=0)  # total number of reports received; surfaces flagged content
+    report_count = db.Column(db.Integer,  default=0)
 
     beat   = db.relationship('Beat', back_populates='comments', foreign_keys=[beat_id])
     author = db.relationship('User', foreign_keys=[author_id],
@@ -293,7 +299,7 @@ class CommentReport(db.Model):
     id         = db.Column(db.Integer, primary_key=True)
     comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'), nullable=False, index=True)
     user_id    = db.Column(db.Integer, db.ForeignKey('user.id'),    nullable=False, index=True)
-    reason     = db.Column(db.String(64), nullable=True)  # e.g. 'spam', 'hate', 'inappropriate'
+    reason     = db.Column(db.String(64), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (db.UniqueConstraint('comment_id', 'user_id', name='unique_report'),)

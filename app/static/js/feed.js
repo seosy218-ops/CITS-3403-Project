@@ -1088,12 +1088,13 @@ async function pingPlay(beatId) {
 function initLikeButtons() {
   document.addEventListener('click', async e => {
     const btn = e.target.closest('.feed-like-btn');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     if (!cfg.isAuthenticated) {
       window.location.href = '/login';
       return;
     }
     const beatId = Number(btn.dataset.beatId);
+    btn.disabled = true;
     try {
       const data = await postJSON(`/api/beats/${beatId}/like`);
       const icon = btn.querySelector('i');
@@ -1108,6 +1109,8 @@ function initLikeButtons() {
       if (countEl) countEl.textContent = formatNum(data.likes_count);
     } catch (err) {
       if (err.message.includes('401')) window.location.href = '/login';
+    } finally {
+      btn.disabled = false;
     }
   });
 }
@@ -1117,12 +1120,13 @@ function initLikeButtons() {
 function initFollowButtons() {
   document.addEventListener('click', async e => {
     const btn = e.target.closest('.feed-follow-btn');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     if (!cfg.isAuthenticated) {
       window.location.href = '/login';
       return;
     }
     const producerId = Number(btn.dataset.producerId);
+    btn.disabled = true;
     try {
       const data = await postJSON(`/api/producers/${producerId}/follow`);
       const icon = btn.querySelector('i');
@@ -1135,6 +1139,8 @@ function initFollowButtons() {
       }
     } catch (err) {
       if (err.message.includes('401')) window.location.href = '/login';
+    } finally {
+      btn.disabled = false;
     }
   });
 }
@@ -1443,9 +1449,10 @@ function initReportModal() {
 function initSaveButtons() {
   document.addEventListener('click', async e => {
     const btn = e.target.closest('.feed-save-btn');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     if (!cfg.isAuthenticated) { window.location.href = '/login'; return; }
     const beatId = Number(btn.dataset.beatId);
+    btn.disabled = true;
     try {
       const data = await postJSON(`/api/beats/${beatId}/save`);
       const icon = btn.querySelector('i');
@@ -1460,6 +1467,8 @@ function initSaveButtons() {
       }
     } catch (err) {
       if (err.message && err.message.includes('401')) window.location.href = '/login';
+    } finally {
+      btn.disabled = false;
     }
   });
 }
@@ -1548,9 +1557,6 @@ function appendBeatCard(beat) {
   const sentinel = document.getElementById('feed-load-sentinel');
   if (!scroll || !sentinel) return;
 
-  // Cycle through 8 background gradients based on current card count
-  const bgIndex = scroll.querySelectorAll('.feed-card').length % 8;
-
   const card = document.createElement('div');
   card.className    = 'feed-card';
   card.id           = `feed-card-${beat.id}`;
@@ -1593,10 +1599,11 @@ function appendBeatCard(beat) {
 
   // Build identical DOM structure to the server-rendered feed.html cards
   card.innerHTML = `
-    <div class="feed-bg feed-bg-${bgIndex}"></div>
+    <div class="feed-bg"></div>
     <div class="feed-vignette"></div>
     <div class="feed-waveform-shell">
-      <canvas class="feed-waveform-canvas" id="waveform-${beat.id}"></canvas>
+      <canvas class="feed-waveform-canvas" id="waveform-${beat.id}"
+              role="img" aria-label="Waveform for ${escHtml(beat.title)}"></canvas>
     </div>
     <div class="feed-transport-dock" id="transport-${beat.id}" data-beat-id="${beat.id}">
       <div class="feed-transport-row">

@@ -1,6 +1,5 @@
 import logging
 import os
-import random
 from secrets import token_hex
 from urllib.parse import quote, urlsplit
 from werkzeug.utils import secure_filename
@@ -9,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
-from app.forms import SignupForm, LoginForm, UploadBeatForm, SearchForm, EditProfileForm
+from app.forms import SignupForm, LoginForm, UploadBeatForm, EditProfileForm
 from app.models import db, User, Beat, Like, saved_beats, follows
 from app.services.feed_service import get_feed_beats
 
@@ -58,10 +57,10 @@ def _save_user_upload(file, user_id):
     
     # Read size from the stream, then reset so save() starts from byte 0.
     file.seek(0, 2)
-    if file.tell() > MAX_UPLOAD_SIZE:
-        file.seek(0)  # Reset for potential re-used file object
+    size = file.tell()
+    file.seek(0)
+    if size == 0 or size > MAX_UPLOAD_SIZE:
         return None
-    file.seek(0)  # Reset
     
     file.save(filepath)
     return f'/static/uploads/profiles/{filename}'
@@ -80,7 +79,7 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
         if user and user.check_password(form.password.data):
-            login_user(user)
+            login_user(user, remember=form.remember.data)
             flash('Logged in successfully.', 'success')
             next_page = request.args.get('next', '')
             # Guard against open-redirect: only allow relative URLs (no scheme or netloc)
@@ -335,23 +334,21 @@ def follow(user_id):
         current_user.follow(user)
         db.session.commit()
         flash(f'Now following {user.username}.', 'success')
-    return redirect(request.referrer or url_for('main.feed'))
+    referrer = request.referrer or ''
+    if referrer and urlsplit(referrer).netloc not in ('', request.host):
+        referrer = ''
+    return redirect(referrer or url_for('main.feed'))
 
 
-@main.route('/search', methods=['GET', 'POST'])
+@main.route('/search')
 def search():
-    form = SearchForm()
     beats, producers = [], []
-    query       = request.args.get('q', '')
-    search_type = request.args.get('type', 'all')
-    genre_filter = request.args.get('genre', '')
+    query        = request.args.get('q', '').strip()
+    search_type  = request.args.get('type', 'all')
+    genre_filter = request.args.get('genre', '').strip()
 
-    if form.validate_on_submit() or query:
-        query        = form.query.data or query
-        search_type  = form.search_type.data or search_type
-        genre_filter = form.genre.data or genre_filter
-
-        if search_type in ['all', 'beats']:
+    if query or genre_filter:
+        if search_type in ('all', 'beats'):
             bq = Beat.query
             if query:
                 bq = bq.filter(
@@ -363,14 +360,21 @@ def search():
                 bq = bq.filter(Beat.genre.ilike(f'%{genre_filter}%'))
             beats = bq.order_by(Beat.uploaded_at.desc()).all()
 
-        if search_type in ['all', 'producers']:
-            pq = User.query
-            if query:
-                pq = pq.filter(
-                    User.username.ilike(f'%{query}%') |
-                    User.bio.ilike(f'%{query}%')
-                )
-            producers = pq.all()
+        if search_type in ('all', 'producers') and query:
+            producers = User.query.filter(
+                User.username.ilike(f'%{query}%') |
+                User.bio.ilike(f'%{query}%')
+            ).all()
 
-    return render_template('main/search.html', form=form, beats=beats, producers=producers,
-                           query=query, search_type=search_type, genre_filter=genre_filter)
+    # Batch-load follower counts so the template doesn't fire one query per producer
+    follower_counts = {}
+    if producers:
+        rows = (db.session.query(follows.c.followed_id, db.func.count(follows.c.follower_id))
+                .filter(follows.c.followed_id.in_([p.id for p in producers]))
+                .group_by(follows.c.followed_id)
+                .all())
+        follower_counts = {pid: cnt for pid, cnt in rows}
+
+    return render_template('main/search.html', beats=beats, producers=producers,
+                           query=query, search_type=search_type, genre_filter=genre_filter,
+                           follower_counts=follower_counts)
