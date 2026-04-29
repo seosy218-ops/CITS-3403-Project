@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Search — TuneFeed{% endblock %}
+
+{% block full_page %}
+<main class="container py-4" style="max-width: 980px;">
+  <h1 class="h3 mb-3">Search</h1>
+
+  {# ── Search form ─────────────────────────────────────────────
+     GET form so the query string is bookmarkable and shareable.
+     'q' = free-text query, 'type' = entity filter, 'genre' = genre filter.
+     Handled server-side in routes.py search().
+     ─────────────────────────────────────────────────────────── #}
+  <form method="GET" action="{{ url_for('main.search') }}" class="row g-2 mb-4">
+    <div class="col-md-5">
+      {# Text query — matched against beat title, genre, mood_tag, and producer username #}
+      <input
+        type="text"
+        class="form-control"
+        name="q"
+        value="{{ query or '' }}"
+        placeholder="Search beats, genres, moods, or producers"
+      />
+    </div>
+    <div class="col-md-3">
+      {# Entity type filter — limits results to beats or producers only if not 'all' #}
+      <select class="form-select" name="type">
+        <option value="all" {% if search_type == 'all' %}selected{% endif %}>All</option>
+        <option value="beats" {% if search_type == 'beats' %}selected{% endif %}>Beats</option>
+        <option value="producers" {% if search_type == 'producers' %}selected{% endif %}>Producers</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      {# Genre secondary filter — narrows beat results to a specific genre string #}
+      <input
+        type="text"
+        class="form-control"
+        name="genre"
+        value="{{ genre_filter or '' }}"
+        placeholder="Genre"
+      />
+    </div>
+    <div class="col-md-2 d-grid">
+      <button type="submit" class="btn-ts-primary w-100">Search</button>
+    </div>
+  </form>
+
+  {# ── Beat results ────────────────────────────────────────────
+     Only rendered when the server found at least one matching beat.
+     Each row links to the beat detail page.
+     ─────────────────────────────────────────────────────────── #}
+  {% if beats %}
+    <section class="mb-4">
+      <h2 class="h5">Beats</h2>
+      <div class="list-group">
+        {% for beat in beats %}
+          <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="list-group-item list-group-item-action">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ beat.title }}</strong>
+                <div class="small text-muted">
+                  {{ beat.genre or 'Unknown genre' }}
+                  {% if beat.bpm %} | {{ beat.bpm }} BPM{% endif %}
+                  {% if beat.key %} | {{ beat.key }}{% endif %}
+                </div>
+              </div>
+              <span class="badge text-bg-dark">{{ beat.likes_count }} likes</span>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# ── Producer results ────────────────────────────────────────
+     Only rendered when the server found at least one matching producer.
+     Each row links to the producer's public profile page.
+     ─────────────────────────────────────────────────────────── #}
+  {% if producers %}
+    <section>
+      <h2 class="h5">Producers</h2>
+      <div class="list-group">
+        {% for producer in producers %}
+          <a href="{{ url_for('main.profile', user_id=producer.id) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <span>{{ producer.username }}</span>
+            <span class="text-muted small">{{ follower_counts.get(producer.id, 0) }} followers</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+
+  {# Empty state — only shown when the user submitted a query and nothing matched. #}
+  {% if (query or genre_filter) and not beats and not producers %}
+    <p class="text-muted">No results found.</p>
+  {% endif %}
+</main>
+{% endblock %}

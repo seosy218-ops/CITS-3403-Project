@@ -1,0 +1,412 @@
+/* ============================================================
+   TUNEFEED — Profile Page Styles
+   ============================================================ */
+
+.profile-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 22px 80px;
+}
+
+/* ── Header card ────────────────────────────────────────────
+   Avatar, username, bio, and stats rendered in a single
+   surface card at the top of the profile page.
+   ─────────────────────────────────────────────────────────── */
+.profile-header {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 16px;
+  padding: 32px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 36px;
+}
+
+/* Large circular avatar */
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--ts-orange);
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--ts-border);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.profile-avatar-placeholder {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 4px solid var(--ts-orange);
+  background: linear-gradient(135deg, var(--ts-orange-dim), rgba(255, 140, 0, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--ts-orange);
+  flex-shrink: 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.profile-info { 
+  flex: 1; 
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.profile-username {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 4px;
+  color: var(--ts-text-primary);
+}
+
+.profile-joined {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+}
+
+.profile-bio {
+  font-size: 13px;
+  color: var(--ts-text-secondary);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.profile-bio-empty {
+  font-style: italic;
+  color: var(--ts-text-muted);
+}
+
+/* Row of 5 stat blocks */
+.profile-stats {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+
+.profile-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.profile-stat-value {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--ts-text-primary);
+}
+
+.profile-stat-label {
+  font-size: 10px;
+  color: var(--ts-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+/* Follow/Unfollow action button area */
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.profile-follow-btn {
+  padding: 11px 28px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-block;
+  letter-spacing: 0.01em;
+}
+
+.profile-follow-btn.is-following {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--ts-text-secondary);
+  border: 1px solid var(--ts-border);
+}
+.profile-follow-btn.is-following:hover {
+  background: rgba(255, 80, 80, 0.12);
+  color: #ff5050;
+  border-color: rgba(255, 80, 80, 0.3);
+}
+
+.profile-follow-btn:not(.is-following) {
+  background: linear-gradient(135deg, var(--ts-orange), var(--ts-orange-light));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+.profile-follow-btn:not(.is-following):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 140, 0, 0.4);
+}
+
+/* "This is you" label when viewing own profile */
+.profile-own-label {
+  font-size: 12px;
+  color: var(--ts-text-muted);
+  padding: 9px 0;
+}
+
+/* ── Tab bar ─────────────────────────────────────────────── */
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--ts-border);
+  margin-bottom: 24px;
+}
+
+.profile-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ts-text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s;
+  margin-bottom: -1px;
+}
+
+.profile-tab:hover { color: var(--ts-text-secondary); }
+
+.profile-tab.active {
+  color: var(--ts-orange-light);
+  border-bottom-color: var(--ts-orange-light);
+}
+
+.profile-tab-count {
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--ts-orange-dim);
+  color: var(--ts-orange-light);
+  border-radius: 100px;
+  padding: 1px 7px;
+}
+
+/* ── Beat grid ───────────────────────────────────────────── */
+.profile-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--ts-text-primary);
+}
+
+.profile-beats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+
+/* Individual beat card */
+.profile-beat-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 12px;
+  overflow: hidden;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+  user-select: none;
+}
+.profile-beat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Square cover art */
+.profile-beat-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--ts-border);
+}
+
+.profile-beat-cover-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ts-text-muted);
+  font-size: 2rem;
+}
+
+.profile-beat-body {
+  padding: 10px 12px 12px;
+}
+
+.profile-beat-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.profile-beat-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ts-text-muted);
+}
+
+.profile-beat-meta span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Genre label on the card */
+.profile-beat-genre {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ts-orange);
+  background: var(--ts-orange-dim);
+  border-radius: 100px;
+  padding: 1px 8px;
+  margin-bottom: 4px;
+}
+
+/* ── Pagination ──────────────────────────────────────────── */
+.profile-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.profile-page-btn {
+  padding: 7px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  color: var(--ts-text-secondary);
+  text-decoration: none;
+  transition: all 0.18s;
+}
+.profile-page-btn:hover,
+.profile-page-btn.active {
+  background: var(--ts-orange);
+  border-color: var(--ts-orange);
+  color: #fff;
+}
+
+/* ── Empty beats state ───────────────────────────────────── */
+.profile-no-beats {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ts-text-muted);
+}
+.profile-no-beats i {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .profile-header {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .profile-avatar,
+  .profile-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+  }
+
+  .profile-info {
+    align-items: center;
+  }
+
+  .profile-stats {
+    justify-content: center;
+  }
+
+  .profile-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-page {
+    padding: 24px 12px 60px;
+  }
+
+  .profile-header {
+    padding: 24px 20px;
+    border-radius: 12px;
+  }
+
+  .profile-username {
+    font-size: 1.4rem;
+  }
+
+  .profile-bio {
+    font-size: 12px;
+  }
+
+  .profile-stats {
+    gap: 20px;
+  }
+
+  .profile-stat-value {
+    font-size: 1.1rem;
+  }
+
+  .profile-section-title {
+    font-size: 1rem;
+  }
+
+  .profile-beats-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+
+  .profile-beat-title {
+    font-size: 12px;
+  }
+
+  .profile-beat-meta {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.username }} — TuneFeed{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+{% endblock %}
+
+{% block full_page %}
+<div class="profile-page">
+
+  {# ═══════════════════════════════════════════════════════════
+     PROFILE HEADER — avatar, bio, stats, follow button
+     ═══════════════════════════════════════════════════════════ #}
+  <div class="profile-header">
+
+    {# Avatar: real image or initial-letter fallback #}
+    {% if user.avatar_url %}
+      <img src="{{ user.avatar_url }}" alt="{{ user.username }}" class="profile-avatar" />
+    {% else %}
+      <div class="profile-avatar-placeholder">{{ user.username[0].upper() }}</div>
+    {% endif %}
+
+    <div class="profile-info">
+      <div class="profile-username">{{ user.username }}</div>
+      <div class="profile-joined">
+        <i class="bi bi-calendar3"></i>
+        Joined {{ user.created_at.strftime('%B %Y') if user.created_at else 'TuneFeed' }}
+      </div>
+
+      {% if user.bio %}
+        <p class="profile-bio">{{ user.bio }}</p>
+      {% else %}
+        <p class="profile-bio profile-bio-empty">No bio yet.</p>
+      {% endif %}
+
+      {# Four key stats in a horizontal row #}
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="profile-stat-value">{{ beats.total }}</span>
+          <span class="profile-stat-label">Beats</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-value">{{ total_plays | format_num }}</span>
+          <span class="profile-stat-label">Plays</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-value">{{ total_likes | format_num }}</span>
+          <span class="profile-stat-label">Likes</span>
+        </div>
+        <div class="profile-stat">
+          {# id used by the inline JS to update this value after AJAX follow/unfollow #}
+          <span class="profile-stat-value profile-stat-followers" id="profile-followers-count">{{ followers_count }}</span>
+          <span class="profile-stat-label">Followers</span>
+        </div>
+        <div class="profile-stat">
+          <span class="profile-stat-value">{{ following_count }}</span>
+          <span class="profile-stat-label">Following</span>
+        </div>
+      </div>
+    </div>
+
+    {# Follow / Unfollow — AJAX via the API; falls back to the non-AJAX route for safety #}
+    <div class="profile-actions">
+      {% if current_user.is_authenticated %}
+        {% if current_user.id == user.id %}
+          <a href="{{ url_for('main.edit_profile') }}" class="profile-follow-btn">Edit Profile</a>
+        {% else %}
+          {# The button is wired up by profile.js via the API endpoint;
+             the href is a non-JS fallback so follow still works without JS #}
+          <a href="{{ url_for('main.follow', user_id=user.id) }}"
+             class="profile-follow-btn {% if is_following %}is-following{% endif %}"
+             id="profile-follow-btn"
+             data-producer-id="{{ user.id }}"
+             data-following="{{ 'true' if is_following else 'false' }}">
+            {% if is_following %}Unfollow{% else %}Follow{% endif %}
+          </a>
+        {% endif %}
+      {% else %}
+        {# Guest — send to register to follow #}
+        <a href="{{ url_for('main.register') }}" class="profile-follow-btn">Join to Follow</a>
+      {% endif %}
+    </div>
+
+  </div>{# /profile-header #}
+
+
+  {# ═══════════════════════════════════════════════════════════
+     TABS — Beats / Saved (Saved only visible on own profile)
+     ═══════════════════════════════════════════════════════════ #}
+  <div class="profile-tabs">
+    <button class="profile-tab active" data-tab="beats">
+      <i class="bi bi-music-note-list"></i> Beats
+      {% if beats.total > 0 %}<span class="profile-tab-count">{{ beats.total }}</span>{% endif %}
+    </button>
+    {% if current_user.is_authenticated and current_user.id == user.id %}
+    <button class="profile-tab" data-tab="saved">
+      <i class="bi bi-bookmark"></i> Saved
+      {% if saved_beats_page and saved_beats_page.total > 0 %}<span class="profile-tab-count">{{ saved_beats_page.total }}</span>{% endif %}
+    </button>
+    {% endif %}
+  </div>
+
+  {# ── BEATS PANEL ── #}
+  <div class="profile-tab-panel" id="tab-panel-beats">
+
+  <h2 class="profile-section-title">
+    Beats
+    {% if beats.total > 0 %}
+      <span style="font-size:13px;font-weight:400;color:var(--ts-text-muted);">
+        ({{ beats.total }})
+      </span>
+    {% endif %}
+  </h2>
+
+  {% if beats.items %}
+    <div class="profile-beats-grid">
+      {% for beat in beats.items %}
+        <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="profile-beat-card">
+
+          <div class="profile-beat-body">
+            {% if beat.genre %}
+              <div class="profile-beat-genre">{{ beat.genre }}</div>
+            {% endif %}
+
+            <div class="profile-beat-title" title="{{ beat.title }}">{{ beat.title }}</div>
+
+            <div class="profile-beat-meta">
+              {# Play count #}
+              <span>
+                <i class="bi bi-play-fill"></i>
+                {{ beat.play_count | format_num }}
+              </span>
+
+              {# Like count #}
+              <span>
+                <i class="bi bi-heart-fill"></i>
+                {{ beat.likes_count | format_num }}
+              </span>
+
+              {# Price or FREE badge #}
+              {% if beat.price == 0 %}
+                <span style="color:var(--ts-teal);font-weight:700;">FREE</span>
+              {% else %}
+                <span style="color:var(--ts-orange);">${{ '%.0f' | format(beat.price) }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+
+    {# ── Pagination controls ── #}
+    {% if beats.pages > 1 %}
+      <div class="profile-pagination">
+        {% if beats.has_prev %}
+          <a href="{{ url_for('main.profile', user_id=user.id, page=beats.prev_num) }}"
+             class="profile-page-btn">
+            <i class="bi bi-chevron-left"></i> Prev
+          </a>
+        {% endif %}
+
+        {# Show up to 5 page numbers centred on the current page #}
+        {% for p in beats.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+          {% if p %}
+            <a href="{{ url_for('main.profile', user_id=user.id, page=p) }}"
+               class="profile-page-btn {% if p == beats.page %}active{% endif %}">
+              {{ p }}
+            </a>
+          {% else %}
+            <span class="profile-page-btn" style="cursor:default;">…</span>
+          {% endif %}
+        {% endfor %}
+
+        {% if beats.has_next %}
+          <a href="{{ url_for('main.profile', user_id=user.id, page=beats.next_num) }}"
+             class="profile-page-btn">
+            Next <i class="bi bi-chevron-right"></i>
+          </a>
+        {% endif %}
+      </div>
+    {% endif %}
+
+  {% else %}
+    <div class="profile-no-beats">
+      <i class="bi bi-vinyl"></i>
+      {% if current_user.is_authenticated and current_user.id == user.id %}
+        <p>You haven't uploaded any beats yet.</p>
+        <a href="{{ url_for('main.upload') }}"
+           class="btn-ts-primary"
+           style="display:inline-block;width:auto;padding:10px 24px;text-decoration:none;margin-top:12px;">
+          Upload Your First Beat
+        </a>
+      {% else %}
+        <p>{{ user.username }} hasn't uploaded any beats yet.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  </div>{# /tab-panel-beats #}
+
+  {# ── SAVED PANEL (own profile only) ── #}
+  {% if current_user.is_authenticated and current_user.id == user.id %}
+  <div class="profile-tab-panel" id="tab-panel-saved" style="display:none">
+    <h2 class="profile-section-title">
+      Saved Beats
+      {% if saved_beats_page and saved_beats_page.total > 0 %}
+        <span style="font-size:13px;font-weight:400;color:var(--ts-text-muted);">({{ saved_beats_page.total }})</span>
+      {% endif %}
+    </h2>
+
+    {% if saved_beats_page and saved_beats_page.items %}
+      <div class="profile-beats-grid">
+        {% for beat in saved_beats_page.items %}
+          <a href="{{ url_for('main.beat_detail', beat_id=beat.id) }}" class="profile-beat-card">
+            <div class="profile-beat-body">
+              {% if beat.genre %}
+                <div class="profile-beat-genre">{{ beat.genre }}</div>
+              {% endif %}
+              <div class="profile-beat-title" title="{{ beat.title }}">{{ beat.title }}</div>
+              <div class="profile-beat-meta">
+                <span><i class="bi bi-person-fill"></i> @{{ beat.producer.username }}</span>
+                <span><i class="bi bi-play-fill"></i> {{ beat.play_count | format_num }}</span>
+                {% if beat.price == 0 %}
+                  <span style="color:var(--ts-teal);font-weight:700;">FREE</span>
+                {% else %}
+                  <span style="color:var(--ts-orange);">${{ '%.0f' | format(beat.price) }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+
+      {% if saved_beats_page.pages > 1 %}
+        <div class="profile-pagination">
+          {% if saved_beats_page.has_prev %}
+            <a href="{{ url_for('main.profile', user_id=user.id, saved_page=saved_beats_page.prev_num) }}"
+               class="profile-page-btn"><i class="bi bi-chevron-left"></i> Prev</a>
+          {% endif %}
+          {% for p in saved_beats_page.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if p %}
+              <a href="{{ url_for('main.profile', user_id=user.id, saved_page=p) }}"
+                 class="profile-page-btn {% if p == saved_beats_page.page %}active{% endif %}">{{ p }}</a>
+            {% else %}
+              <span class="profile-page-btn" style="cursor:default;">…</span>
+            {% endif %}
+          {% endfor %}
+          {% if saved_beats_page.has_next %}
+            <a href="{{ url_for('main.profile', user_id=user.id, saved_page=saved_beats_page.next_num) }}"
+               class="profile-page-btn">Next <i class="bi bi-chevron-right"></i></a>
+          {% endif %}
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="profile-no-beats">
+        <i class="bi bi-bookmark"></i>
+        <p>No saved beats yet. Tap the bookmark on any beat in the feed to save it here.</p>
+      </div>
+    {% endif %}
+  </div>{# /tab-panel-saved #}
+  {% endif %}
+
+</div>{# /profile-page #}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* Profile tab switching — Beats / Saved */
+(function () {
+  'use strict';
+  document.querySelectorAll('.profile-tab').forEach(function (tab) {
+    tab.addEventListener('click', function () {
+      const target = tab.dataset.tab;
+      document.querySelectorAll('.profile-tab').forEach(function (t) { t.classList.remove('active'); });
+      document.querySelectorAll('.profile-tab-panel').forEach(function (p) { p.style.display = 'none'; });
+      tab.classList.add('active');
+      const panel = document.getElementById('tab-panel-' + target);
+      if (panel) panel.style.display = 'block';
+    });
+  });
+})();
+
+/* AJAX follow/unfollow on the profile page — prevents full page reload */
+(function () {
+  'use strict';
+
+  const btn = document.getElementById('profile-follow-btn');
+  if (!btn) return;
+
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  btn.addEventListener('click', async function (e) {
+    e.preventDefault();  /* block the <a href> fallback navigation */
+
+    const producerId = btn.dataset.producerId;
+    btn.disabled = true;
+
+    try {
+      const r = await fetch(`/api/producers/${producerId}/follow`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+      });
+      if (!r.ok) {
+        if (r.status === 401) { window.location.href = '/login'; return; }
+        throw new Error(`HTTP ${r.status}`);
+      }
+      const data = await r.json();
+
+      /* Update button text and state to reflect the new relationship */
+      if (data.following) {
+        btn.textContent = 'Unfollow';
+        btn.classList.add('is-following');
+        btn.dataset.following = 'true';
+      } else {
+        btn.textContent = 'Follow';
+        btn.classList.remove('is-following');
+        btn.dataset.following = 'false';
+      }
+
+      /* Update the followers count stat on the page without a reload */
+      const followerStat = document.getElementById('profile-followers-count');
+      if (followerStat && data.followers_count !== undefined) {
+        followerStat.textContent = data.followers_count;
+      }
+    } catch (err) {
+      /* On error, fall back to the non-AJAX href */
+      window.location.href = btn.getAttribute('href');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+})();
+</script>
+{% endblock %}

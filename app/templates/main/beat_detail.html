@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ beat.title }} — TuneFeed{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1>{{ beat.title }}</h1>
+  <p class="text-muted">by @{{ beat.producer.username }}</p>
+  <p>Genre: {{ beat.genre or '—' }} &nbsp;|&nbsp; BPM: {{ beat.bpm }}</p>
+  <p>Price: {% if beat.price == 0 %}Free{% else %}${{ "%.0f"|format(beat.price) }}{% endif %}</p>
+  {% if current_user.is_authenticated %}
+    <button class="feed-rail-btn feed-like-btn {% if is_liked %}is-liked{% endif %}"
+            data-beat-id="{{ beat.id }}" aria-label="Like this beat">
+      <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+      Like
+    </button>
+  {% endif %}
+  <a href="{{ url_for('main.feed') }}" class="btn btn-secondary ms-2">Back to Feed</a>
+</div>
+{% endblock %}
