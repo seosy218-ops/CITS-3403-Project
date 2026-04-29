@@ -15,26 +15,44 @@
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="auth-alert auth-alert-{{ category }}" role="alert">
+          {{ message }}
+          <button type="button" class="auth-alert-close" aria-label="Close">&times;</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
     <!-- POST form for collecting initial account details. -->
-    <form method="POST" action="{{ url_for('register') }}" class="ts-validate needs-validation" novalidate>
+    <form method="POST" action="{{ url_for('main.register') }}" class="ts-validate needs-validation" novalidate>
+      {{ form.hidden_tag() }}
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
-        <input id="username" name="username" type="text" class="ts-input" placeholder="producername" required />
+        <input id="username" name="username" type="text" class="ts-input" placeholder="producername"
+               required minlength="3" maxlength="64" aria-describedby="username-feedback" />
+        <div class="invalid-feedback" id="username-feedback">Please enter a username (3–64 characters).</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
-        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com" required />
+        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
+               required aria-describedby="email-feedback" />
+        <div class="invalid-feedback" id="email-feedback">Please enter a valid email address.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="password">Password</label>
-        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••" required />
+        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••"
+               required minlength="6" aria-describedby="password-feedback" />
+        <div class="invalid-feedback" id="password-feedback">Password must be at least 6 characters.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="confirm_password">Confirm Password</label>
-        <input id="confirm_password" name="confirm_password" type="password" class="ts-input" placeholder="••••••••" required />
+        <input id="confirm_password" name="confirm_password" type="password" class="ts-input" placeholder="••••••••"
+               required aria-describedby="confirm-password-feedback" />
+        <div class="invalid-feedback" id="confirm-password-feedback">Please confirm your password.</div>
       </div>
 
       <div class="ts-form-group">
@@ -51,8 +69,12 @@
     <!-- Return path for existing users. -->
     <div class="auth-switch">
       Already have an account?
-      <a href="{{ url_for('login') }}" class="auth-switch-link">Sign In</a>
+      <a href="{{ url_for('main.login') }}" class="auth-switch-link">Sign In</a>
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth-login.js') }}"></script>
 {% endblock %}
