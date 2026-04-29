@@ -2,16 +2,15 @@
 
 {% block title %}Create Account — TuneFeed{% endblock %}
 
+{# Reuses the same auth CSS as the login page (layout, password toggle, input styles) #}
 {% block extra_css %}
-<!-- Shared auth styles reused by registration page. -->
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
 {% endblock %}
 
 {% block full_page %}
-<!-- Registration page shell centered within the viewport. -->
 <div class="auth-page">
   <div class="ts-form-card shadow-sm">
-    <!-- Product identity and onboarding tagline. -->
+
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Create your profile and start discovering beats.</div>
 
@@ -24,57 +23,65 @@
       {% endfor %}
     {% endwith %}
 
-    <!-- POST form for collecting initial account details. -->
+    {# novalidate defers validation to auth-login.js so we control error styling #}
     <form method="POST" action="{{ url_for('main.register') }}" class="ts-validate needs-validation" novalidate>
+
+      {# hidden_tag() renders the CSRF hidden input — required for Flask-WTF to accept this POST #}
       {{ form.hidden_tag() }}
+
       <div class="ts-form-group">
         <label class="form-label" for="username">Username</label>
-        <input id="username" name="username" type="text" class="ts-input" placeholder="producername"
+        {# value re-populates after a failed submission (e.g. username already taken) #}
+        <input id="username" name="username" type="text" class="ts-input"
+               placeholder="producername" value="{{ form.username.data or '' }}"
                required minlength="3" maxlength="64" aria-describedby="username-feedback" />
         <div class="invalid-feedback" id="username-feedback">Please enter a username (3–64 characters).</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
-        <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
+        <input id="email" name="email" type="email" class="ts-input"
+               placeholder="your@email.com" value="{{ form.email.data or '' }}"
                required aria-describedby="email-feedback" />
         <div class="invalid-feedback" id="email-feedback">Please enter a valid email address.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="password">Password</label>
-        <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••"
-               required minlength="6" aria-describedby="password-feedback" />
+        {# password-wrapper provides relative positioning for the absolute toggle button #}
+        <div class="password-wrapper">
+          <input id="password" name="password" type="password" class="ts-input"
+                 placeholder="••••••••" required minlength="6" aria-describedby="password-feedback" />
+          {# type="button" prevents accidental form submission when clicking the eye icon #}
+          <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
         <div class="invalid-feedback" id="password-feedback">Password must be at least 6 characters.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="confirm_password">Confirm Password</label>
-        <input id="confirm_password" name="confirm_password" type="password" class="ts-input" placeholder="••••••••"
-               required aria-describedby="confirm-password-feedback" />
+        {# WTForms EqualTo validator checks this matches the password field server-side #}
+        <input id="confirm_password" name="confirm_password" type="password" class="ts-input"
+               placeholder="••••••••" required aria-describedby="confirm-password-feedback" />
         <div class="invalid-feedback" id="confirm-password-feedback">Please confirm your password.</div>
-      </div>
-
-      <div class="ts-form-group">
-        <label class="form-label" for="account_type">Account Type</label>
-        <select id="account_type" name="account_type" class="ts-input" required>
-          <option value="listener" selected>Listener</option>
-          <option value="producer">Producer</option>
-        </select>
       </div>
 
       <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Create Account</button>
     </form>
 
-    <!-- Return path for existing users. -->
+    {# Prompt for users who already have an account #}
     <div class="auth-switch">
       Already have an account?
       <a href="{{ url_for('main.login') }}" class="auth-switch-link">Sign In</a>
     </div>
+
   </div>
 </div>
 {% endblock %}
 
+{# auth-login.js handles: form validation feedback and password toggle #}
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/auth-login.js') }}"></script>
 {% endblock %}
