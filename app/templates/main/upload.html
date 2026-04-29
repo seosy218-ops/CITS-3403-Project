@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Beat — TuneFeed{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:600px">
+  <h1 class="mb-4">Upload a Beat</h1>
+  <form method="POST" enctype="multipart/form-data" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="mb-3">
+      {{ form.title.label(class="form-label") }}
+      {{ form.title(class="form-control", placeholder="Beat title") }}
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col">
+        {{ form.genre.label(class="form-label") }}
+        {{ form.genre(class="form-control", placeholder="e.g. Trap") }}
+      </div>
+      <div class="col">
+        {{ form.bpm.label(class="form-label") }}
+        {{ form.bpm(class="form-control", placeholder="140") }}
+      </div>
+    </div>
+
+    <div class="mb-3">
+      {{ form.audio_url.label(class="form-label") }}
+      {{ form.audio_url(class="form-control", placeholder="https://…") }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.price.label(class="form-label") }}
+      {{ form.price(class="form-control", placeholder="0 for free") }}
+    </div>
+
+    <button type="submit" class="btn-ts-primary w-100">Upload Beat</button>
+  </form>
+</div>
+{% endblock %}

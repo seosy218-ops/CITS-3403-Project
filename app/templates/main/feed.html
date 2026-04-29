@@ -29,7 +29,6 @@
   <div class="feed-scroll" id="feed-scroll">
 
     {% for beat in beats %}
-    {% set bg_index = loop.index0 % 8 %}
     <div class="feed-card"
          id="feed-card-{{ beat.id }}"
          data-beat-id="{{ beat.id }}"
@@ -46,12 +45,13 @@
          } | tojson }}'>
 
       {# ── BACKGROUND ── #}
-      <div class="feed-bg feed-bg-{{ bg_index }}"></div>
+      <div class="feed-bg"></div>
       <div class="feed-vignette"></div>
 
       {# ── WAVEFORM (center visual) ── #}
       <div class="feed-waveform-shell">
-        <canvas class="feed-waveform-canvas" id="waveform-{{ beat.id }}"></canvas>
+        <canvas class="feed-waveform-canvas" id="waveform-{{ beat.id }}"
+                role="img" aria-label="Waveform for {{ beat.title }}"></canvas>
       </div>
 
       <div class="feed-transport-dock" id="transport-{{ beat.id }}" data-beat-id="{{ beat.id }}">

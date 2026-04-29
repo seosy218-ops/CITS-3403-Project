@@ -2,6 +2,7 @@
 
 {% block title %}Sign In — TuneFeed{% endblock %}
 
+{# Inject login-page-specific CSS (password toggle, demo buttons, auth layout) #}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/auth-login.css') }}" />
 {% endblock %}
@@ -9,6 +10,8 @@
 {% block full_page %}
 <div class="auth-page">
   <div class="ts-form-card shadow-sm">
+
+    {# Gradient logo text rendered via CSS background-clip trick in auth-login.css #}
     <div class="auth-logo">TuneFeed</div>
     <div class="auth-tagline">Where producers connect &amp; beats get discovered.</div>
 
@@ -21,21 +24,29 @@
       {% endfor %}
     {% endwith %}
 
+    {# novalidate disables browser-native validation so we control the UX via auth-login.js #}
     <form method="POST" action="{{ url_for('main.login') }}" class="ts-validate needs-validation" novalidate
           role="form" aria-label="Sign in to TuneFeed">
+
+      {# hidden_tag() renders the CSRF hidden input — required for Flask-WTF to accept this POST #}
       {{ form.hidden_tag() }}
+
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
+        {# value re-populates the field after a failed submission #}
         <input id="email" name="email" type="email" class="ts-input" placeholder="your@email.com"
+               value="{{ form.email.data or '' }}"
                required autofocus aria-required="true" aria-describedby="email-feedback" />
         <div class="invalid-feedback" id="email-feedback">Please enter a valid email address.</div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="password">Password</label>
+        {# password-wrapper provides relative positioning for the absolute-placed toggle button #}
         <div class="password-wrapper">
           <input id="password" name="password" type="password" class="ts-input" placeholder="••••••••"
                  required aria-required="true" aria-describedby="password-feedback" />
+          {# type="button" prevents this from accidentally submitting the form #}
           <button type="button" class="password-toggle" aria-label="Toggle password visibility">
             <i class="bi bi-eye"></i>
           </button>
@@ -52,6 +63,7 @@
       <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Sign In</button>
     </form>
 
+    {# Navigation prompts for users who don't have an account yet #}
     <div class="auth-switch">
       Don't have an account?
       <a href="{{ url_for('main.register') }}" class="auth-switch-link">Join TuneFeed</a>
@@ -62,27 +74,36 @@
       <a href="{{ url_for('main.discover') }}" class="auth-switch-link">Open Discover</a>
     </div>
 
+    {# ── Demo account buttons ── #}
+    {# data-email / data-password attributes are read by auth-login.js to auto-fill the form #}
     <div class="auth-demo">
       <div class="auth-demo-title">DEMO ACCOUNTS <span class="auth-demo-hint">click to fill</span></div>
       <div class="auth-demo-body">
+
+        {# Listener demo — can browse, like, comment, follow #}
         <button type="button" class="auth-demo-item auth-demo-fill"
                 data-email="demo@tunefeed.io" data-password="password123">
           <strong class="auth-demo-role auth-demo-role-listener">Listener</strong>
           demo@tunefeed.io
           <i class="bi bi-box-arrow-in-right auth-demo-icon"></i>
         </button>
+
+        {# Producer demo — can also upload beats and see the Upload nav link #}
         <button type="button" class="auth-demo-item auth-demo-fill"
                 data-email="metro@tunefeed.io" data-password="password123">
           <strong class="auth-demo-role auth-demo-role-producer">Producer</strong>
           metro@tunefeed.io
           <i class="bi bi-box-arrow-in-right auth-demo-icon"></i>
         </button>
+
       </div>
     </div>
+
   </div>
 </div>
 {% endblock %}
 
+{# auth-login.js handles: form validation, password toggle, demo auto-fill, flash dismiss #}
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/auth-login.js') }}"></script>
 {% endblock %}

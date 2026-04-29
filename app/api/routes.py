@@ -10,7 +10,8 @@ from uuid import uuid4
 from flask import Blueprint, jsonify, request, session
 from flask_login import current_user
 
-from app.models import db, Beat, User, Comment, BeatPlayEvent, CommentReport
+from app.models import (db, Beat, User, Comment, BeatPlayEvent, CommentReport,
+                        Like, saved_beats, follows, comment_likes, comment_dislikes)
 from app.services.feed_service import get_feed_beats
 
 api = Blueprint('api', __name__)
@@ -18,6 +19,7 @@ api = Blueprint('api', __name__)
 # Minimum seconds between play events from the same actor.
 # Prevents double-click inflation while still allowing real replays.
 PLAY_DEDUPE_SECONDS = 8
+MAX_COMMENT_LENGTH  = 500
 
 
 # ---------------------------------------------------------------------------
@@ -35,6 +37,26 @@ def feed():
     # Fetch one extra page-worth so we can determine `has_next` without a separate COUNT query
     beats = get_feed_beats(current_user, limit=page * per_page + per_page, exclude_ids=exclude_ids)
     page_beats = beats[(page - 1) * per_page: page * per_page]
+
+    # Batch-load interaction states in 3 queries instead of 3×N
+    liked_ids = set()
+    saved_ids = set()
+    following_ids = set()
+    if current_user.is_authenticated and page_beats:
+        beat_ids = [b.id for b in page_beats]
+        producer_ids = list({b.producer_id for b in page_beats if b.producer_id})
+        liked_ids = {row[0] for row in
+            db.session.query(Like.beat_id)
+            .filter(Like.user_id == current_user.id, Like.beat_id.in_(beat_ids))
+            .all()}
+        saved_ids = {row[0] for row in
+            db.session.query(saved_beats.c.beat_id)
+            .filter(saved_beats.c.user_id == current_user.id, saved_beats.c.beat_id.in_(beat_ids))
+            .all()}
+        following_ids = {row[0] for row in
+            db.session.query(follows.c.followed_id)
+            .filter(follows.c.follower_id == current_user.id, follows.c.followed_id.in_(producer_ids))
+            .all()}
 
     result = []
     for b in page_beats:
@@ -58,10 +80,9 @@ def feed():
             'producer_username':   producer.username if producer else 'Unknown',
             'producer_avatar':     producer.avatar_url if producer else '',
             'audio_url':           b.audio_url or '',
-            'is_liked':            current_user.has_liked(b) if current_user.is_authenticated else False,
-            'is_saved':            current_user.has_saved(b) if current_user.is_authenticated else False,
-            'is_following':        (current_user.is_following(producer)
-                                    if current_user.is_authenticated and producer else False),
+            'is_liked':            b.id in liked_ids,
+            'is_saved':            b.id in saved_ids,
+            'is_following':        b.producer_id in following_ids,
             'is_trending':         b.is_trending,
         })
 
@@ -162,68 +183,82 @@ def toggle_follow(producer_id):
 # Comments
 # ---------------------------------------------------------------------------
 
-def _serialize_comment(comment):
+def _serialize_comment(comment, liked_ids, disliked_ids, reported_ids):
     author = comment.author
     name   = author.username if author else 'Deleted User'
     avatar = author.avatar_url if (author and author.avatar_url) else ''
 
-    is_liked    = False
-    is_disliked = False
-    is_reported = False
-    can_delete  = False
-    if current_user.is_authenticated:
-        is_liked    = current_user.has_liked_comment(comment)
-        is_disliked = current_user.has_disliked_comment(comment)
-        is_reported = current_user.has_reported_comment(comment)
-        can_delete  = current_user.id == comment.author_id  # only the author can delete
-
-    # Resolve the username being replied to (for the "↩ @username" display)
-    reply_to = comment.parent.author.username if (comment.parent and comment.parent.author) else None
+    can_delete = current_user.is_authenticated and current_user.id == comment.author_id
+    reply_to   = comment.parent.author.username if (comment.parent and comment.parent.author) else None
 
     # Only load replies for top-level comments; nested replies are not recursed further
     replies = comment.replies.order_by(Comment.created_at.asc()).all() if comment.parent_id is None else []
 
     return {
-        'id':             comment.id,
-        'body':           comment.body,
-        'author_id':      comment.author_id,
+        'id':              comment.id,
+        'beat_id':         comment.beat_id,
+        'body':            comment.body,
+        'author_id':       comment.author_id,
         'author_username': name,
-        'author_avatar':  avatar,
-        'created_at':     comment.created_at.isoformat() if comment.created_at else None,
-        'likes_count':    comment.likes_count,
-        'dislikes_count': comment.dislikes_count,
-        'is_liked':       is_liked,
-        'is_disliked':    is_disliked,
-        'is_reported':    is_reported,
-        'can_delete':     can_delete,
-        'parent_id':      comment.parent_id,
-        'reply_to':       reply_to,
-        'replies':        [_serialize_comment(r) for r in replies],
+        'author_avatar':   avatar,
+        'created_at':      comment.created_at.isoformat() if comment.created_at else None,
+        'likes_count':     comment.likes_count,
+        'dislikes_count':  comment.dislikes_count,
+        'is_liked':        comment.id in liked_ids,
+        'is_disliked':     comment.id in disliked_ids,
+        'is_reported':     comment.id in reported_ids,
+        'can_delete':      can_delete,
+        'parent_id':       comment.parent_id,
+        'reply_to':        reply_to,
+        'replies':         [_serialize_comment(r, liked_ids, disliked_ids, reported_ids) for r in replies],
     }
 
 
 @api.route('/beats/<int:beat_id>/comments', methods=['GET'])
 def get_comments(beat_id):
     Beat.query.get_or_404(beat_id)
-    limit = min(request.args.get('limit', 20, type=int), 100)  # cap at 100 to prevent abuse
+    limit = min(request.args.get('limit', 20, type=int), 100)
     now = datetime.utcnow()
 
-    # Only fetch top-level comments; replies are loaded as nested children
-    raw = Comment.query.filter_by(beat_id=beat_id, parent_id=None).all()
+    # Pre-limit before Python scoring to avoid loading the entire table into memory
+    raw = Comment.query.filter_by(beat_id=beat_id, parent_id=None).limit(limit * 5).all()
 
     # Engagement-first ranking with freshness decay and bounded randomness.
     # Prevents older comments from locking in permanently.
     def comment_score(c):
         age_h = max((now - c.created_at).total_seconds() / 3600, 0) if c.created_at else 0
         return (
-            c.likes_count * 2.4                             # likes are the primary signal
-            + 6.0 / (1.0 + age_h / 3.0)                    # decaying freshness boost (half-life ~3h)
-            + (1.2 if age_h < 2 else 0)                     # extra bump for very new comments
-            + random.uniform(0, 2.0 if age_h < 12 else 0.45)  # wider noise window for recent comments
+            c.likes_count * 2.4
+            + 6.0 / (1.0 + age_h / 3.0)
+            + (1.2 if age_h < 2 else 0)
+            + random.uniform(0, 2.0 if age_h < 12 else 0.45)
         )
 
     scored = sorted(raw, key=comment_score, reverse=True)[:limit]
-    return jsonify({'comments': [_serialize_comment(c) for c in scored]})
+
+    # Batch-load interaction states for all comments + their replies in 3 queries
+    all_comments = scored + [r for c in scored for r in c.replies.all()]
+    all_ids = [c.id for c in all_comments]
+
+    liked_ids = disliked_ids = reported_ids = set()
+    if current_user.is_authenticated and all_ids:
+        liked_ids = {row[0] for row in
+            db.session.query(comment_likes.c.comment_id)
+            .filter(comment_likes.c.user_id == current_user.id,
+                    comment_likes.c.comment_id.in_(all_ids))
+            .all()}
+        disliked_ids = {row[0] for row in
+            db.session.query(comment_dislikes.c.comment_id)
+            .filter(comment_dislikes.c.user_id == current_user.id,
+                    comment_dislikes.c.comment_id.in_(all_ids))
+            .all()}
+        reported_ids = {row[0] for row in
+            db.session.query(CommentReport.comment_id)
+            .filter(CommentReport.user_id == current_user.id,
+                    CommentReport.comment_id.in_(all_ids))
+            .all()}
+
+    return jsonify({'comments': [_serialize_comment(c, liked_ids, disliked_ids, reported_ids) for c in scored]})
 
 
 @api.route('/beats/<int:beat_id>/comments', methods=['POST'])
@@ -237,13 +272,15 @@ def post_comment(beat_id):
 
     if not body:
         return jsonify({'error': 'Comment cannot be empty'}), 400
-    if len(body) > 500:
-        return jsonify({'error': 'Comment too long (max 500 chars)'}), 400
+    if len(body) > MAX_COMMENT_LENGTH:
+        return jsonify({'error': f'Comment too long (max {MAX_COMMENT_LENGTH} chars)'}), 400
 
     parent = None
     if parent_id is not None:
-        parent = Comment.query.get_or_404(int(parent_id))
-        # Guard against cross-beat replies from crafted API calls.
+        try:
+            parent = Comment.query.get_or_404(int(parent_id))
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid parent_id'}), 400
         if parent.beat_id != beat.id:
             return jsonify({'error': 'Parent comment not on this beat'}), 400
 
@@ -251,7 +288,7 @@ def post_comment(beat_id):
                       parent_id=parent.id if parent else None)
     db.session.add(comment)
     db.session.commit()
-    return jsonify(_serialize_comment(comment)), 201
+    return jsonify(_serialize_comment(comment, set(), set(), set())), 201
 
 
 @api.route('/comments/<int:comment_id>/like', methods=['POST'])

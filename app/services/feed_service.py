@@ -11,34 +11,36 @@ import math
 import random
 from datetime import datetime
 
-from app.models import Beat
+from sqlalchemy import func
+
+from app.models import Beat, Like, Comment, follows, db
 
 
 def _get_user_context(user):
     """Return (liked_genres, followed_producer_ids) for personalisation."""
     liked_genres, followed_ids = set(), set()
     if user.is_authenticated:
-        from app.models import Like
         rows = (Beat.query
                 .with_entities(Beat.genre)
                 .join(Like, Like.beat_id == Beat.id)
                 .filter(Like.user_id == user.id, Beat.genre.isnot(None))
                 .all())
         liked_genres = {row[0].lower() for row in rows}
-        followed_ids = {u.id for u in user.following.all()}
+        followed_ids = {row[0] for row in
+            db.session.query(follows.c.followed_id)
+            .filter(follows.c.follower_id == user.id)
+            .all()}
     return liked_genres, followed_ids
 
 
-def _score_beat(beat, liked_genres, followed_ids, now):
+def _score_beat(beat, liked_genres, followed_ids, now, likes=0, comments=0):
     """Return a personalized ranking score for one beat."""
     age_hours = max((now - beat.uploaded_at).total_seconds() / 3600, 0) if beat.uploaded_at else 0
     plays = beat.play_count or 0
-    likes = beat.likes_count
-    comments = beat.comment_count
 
     # Normalize interactions by plays so older, high-volume beats do not
     # dominate purely from absolute counts.
-    like_rate = likes / plays if plays > 0 else 0
+    like_rate    = likes    / plays if plays > 0 else 0
     comment_rate = comments / plays if plays > 0 else 0
     engagement = (
         like_rate * 50
@@ -47,7 +49,7 @@ def _score_beat(beat, liked_genres, followed_ids, now):
     )
 
     # Exponential decay favors recency while still allowing evergreen hits.
-    freshness = 15 * math.exp(-age_hours / 48)
+    freshness  = 15 * math.exp(-age_hours / 48)
     # Small exploration bonus surfaces low-play tracks for discovery.
     cold_start = 10 if plays < 3 else (4 if plays < 15 else 0)
 
@@ -71,8 +73,31 @@ def get_feed_beats(user, limit=15, exclude_ids=None):
     if not beats:
         return []
 
+    # Preload like and comment counts in 2 queries instead of 2 COUNT queries per beat
+    beat_ids = [b.id for b in beats]
+    like_counts = dict(
+        db.session.query(Like.beat_id, func.count(Like.id))
+        .filter(Like.beat_id.in_(beat_ids))
+        .group_by(Like.beat_id)
+        .all()
+    )
+    comment_counts = dict(
+        db.session.query(Comment.beat_id, func.count(Comment.id))
+        .filter(Comment.beat_id.in_(beat_ids), Comment.parent_id.is_(None))
+        .group_by(Comment.beat_id)
+        .all()
+    )
+
     liked_genres, followed_ids = _get_user_context(user)
     now = datetime.utcnow()
 
-    scored = sorted(beats, key=lambda beat: _score_beat(beat, liked_genres, followed_ids, now), reverse=True)
+    scored = sorted(
+        beats,
+        key=lambda b: _score_beat(
+            b, liked_genres, followed_ids, now,
+            likes=like_counts.get(b.id, 0),
+            comments=comment_counts.get(b.id, 0),
+        ),
+        reverse=True,
+    )
     return scored[:limit]

@@ -1,4 +1,14 @@
-/* Full-page auth layout with centered card and ambient gradient accents. */
+/* ============================================================
+   AUTH — Login and Register page styles
+   Extends the shared tunefeed.css with auth-specific layout,
+   the password toggle, and demo account buttons.
+   ============================================================ */
+
+/* ── Full-page centred layout ───────────────────────────────
+   Vertically and horizontally centres the form card.
+   The two radial gradients add ambient colour blobs in the
+   top-left (orange) and bottom-right (teal) corners.
+   ─────────────────────────────────────────────────────────── */
 .auth-page {
   min-height: 100vh;
   display: flex;
@@ -6,20 +16,17 @@
   justify-content: center;
   background: var(--ts-bg);
   background-image:
-    radial-gradient(
-      ellipse at 25% 25%,
-      rgba(217, 119, 6, 0.1) 0%,
-      transparent 55%
-    ),
-    radial-gradient(
-      ellipse at 75% 75%,
-      rgba(0, 212, 170, 0.07) 0%,
-      transparent 55%
-    );
+    radial-gradient(ellipse at 25% 25%, rgba(217, 119, 6, 0.1)  0%, transparent 55%),
+    radial-gradient(ellipse at 75% 75%, rgba(0, 212, 170, 0.07) 0%, transparent 55%);
   padding: 40px 20px;
 }
 
-/* Branded heading treatment for TuneFeed logo text. */
+/* ── Brand logo heading ─────────────────────────────────────
+   CSS background-clip trick: the gradient is applied to the
+   background, then clipped to the text shape so only the
+   letters show the colour. -webkit-text-fill-color: transparent
+   makes the text itself invisible so the background shows through.
+   ─────────────────────────────────────────────────────────── */
 .auth-logo {
   font-size: 2rem;
   font-weight: 800;
@@ -31,7 +38,7 @@
   background-clip: text;
 }
 
-/* Supporting message below the auth logo. */
+/* Subtitle line under the logo */
 .auth-tagline {
   text-align: center;
   color: var(--ts-text-muted);
@@ -39,128 +46,7 @@
   margin-bottom: 28px;
 }
 
-/* ── Flash alert messages ── */
-.auth-alert {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-size: 13px;
-  margin-bottom: 16px;
-}
-
-.auth-alert-error {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.25);
-  color: #f87171;
-}
-
-.auth-alert-success {
-  background: rgba(0, 212, 170, 0.1);
-  border: 1px solid rgba(0, 212, 170, 0.25);
-  color: var(--ts-teal);
-}
-
-.auth-alert-close {
-  background: none;
-  border: none;
-  color: inherit;
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 0 0 12px;
-  line-height: 1;
-  opacity: 0.7;
-}
-
-.auth-alert-close:hover {
-  opacity: 1;
-}
-
-/* ── Form validation feedback ── */
-.was-validated .ts-input:invalid {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
-}
-
-.was-validated .ts-input:valid {
-  border-color: var(--ts-teal);
-  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.1);
-}
-
-.invalid-feedback {
-  display: none;
-  font-size: 11px;
-  color: #f87171;
-  margin-top: 6px;
-}
-
-.was-validated .ts-input:invalid ~ .invalid-feedback,
-.was-validated .password-wrapper:has(.ts-input:invalid) ~ .invalid-feedback {
-  display: block;
-}
-
-/* ── Password visibility toggle ── */
-.password-wrapper {
-  position: relative;
-}
-
-.password-wrapper .ts-input {
-  padding-right: 42px;
-}
-
-.password-toggle {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  color: var(--ts-text-muted);
-  cursor: pointer;
-  padding: 0;
-  font-size: 16px;
-  line-height: 1;
-  transition: color 0.15s;
-}
-
-.password-toggle:hover {
-  color: var(--ts-text-secondary);
-}
-
-/* ── Custom checkbox ── */
-.auth-checkbox {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid var(--ts-border);
-  background: rgba(255, 255, 255, 0.05);
-  cursor: pointer;
-  vertical-align: middle;
-  position: relative;
-  transition: all 0.15s;
-}
-
-.auth-checkbox:checked {
-  background: var(--ts-orange);
-  border-color: var(--ts-orange);
-}
-
-.auth-checkbox:checked::after {
-  content: "";
-  position: absolute;
-  left: 4.5px;
-  top: 1.5px;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-/* Remember-me row alignment and spacing. */
+/* Row containing the remember-me checkbox */
 .remember-row {
   display: flex;
   align-items: center;
@@ -177,11 +63,9 @@
   color: var(--ts-text-secondary);
 }
 
-.auth-submit-btn {
-  margin-top: 2px;
-}
+.auth-submit-btn { margin-top: 2px; }
 
-/* Secondary account navigation and CTA text block. */
+/* "Don't have an account?" navigation prompts */
 .auth-switch {
   margin-top: 20px;
   text-align: center;
@@ -189,121 +73,138 @@
   color: var(--ts-text-muted);
 }
 
-/* Compact variant used for secondary navigation prompt. */
+/* Smaller secondary prompt (e.g. "Want to preview first?") */
 .auth-switch-secondary {
   margin-top: 10px;
   font-size: 12px;
 }
 
-.auth-switch-link {
-  color: var(--ts-orange);
-}
+.auth-switch-link       { color: var(--ts-orange); }
+.auth-switch-link:hover { color: var(--ts-orange-light); }
 
-.auth-switch-link:hover {
-  color: var(--ts-orange-light);
-}
+/* ── Password field wrapper ─────────────────────────────────
+   position: relative is required so the absolute-positioned
+   toggle button is contained within the input's bounding box.
+   padding-right on .ts-input reserves space for the button.
+   ─────────────────────────────────────────────────────────── */
+.password-wrapper { position: relative; }
+.password-wrapper .ts-input { padding-right: 42px; } /* make room for the eye icon */
 
-/* ── Demo credentials card ── */
+/* ── Password visibility toggle ─────────────────────────────
+   Absolutely positioned inside the wrapper, vertically centred.
+   background: none removes all browser button chrome so it
+   blends seamlessly into the dark input field.
+   ─────────────────────────────────────────────────────────── */
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);    /* true vertical centre regardless of button height */
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--ts-text-muted);
+  line-height: 1;
+  transition: color 0.15s;
+}
+.password-toggle:hover { color: var(--ts-text-secondary); }
+
+/* ── Demo accounts section ──────────────────────────────────
+   Sits below the form, separated by a top border divider.
+   Used for quick login in demos and assessments.
+   ─────────────────────────────────────────────────────────── */
 .auth-demo {
-  margin-top: 20px;
-  padding: 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--ts-border);
+  margin-top: 24px;
+  border-top: 1px solid var(--ts-border);
+  padding-top: 16px;
 }
 
+/* "DEMO ACCOUNTS — click to fill" header row */
 .auth-demo-title {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--ts-text-muted);
-  margin-bottom: 8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+/* "click to fill" inline hint — normal weight, no uppercase */
 .auth-demo-hint {
   font-weight: 400;
-  opacity: 0.6;
-  font-style: italic;
-  letter-spacing: normal;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .auth-demo-body {
-  font-size: 11px;
-  color: var(--ts-text-secondary);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
-/* Clickable demo credential buttons */
-.auth-demo-fill {
+/* ── Demo account row button ────────────────────────────────
+   appearance: none strips native button chrome (background,
+   border, padding) so we can style it as a custom dark row.
+   data-email / data-password attributes are read by auth-login.js
+   to auto-fill the login form fields.
+   ─────────────────────────────────────────────────────────── */
+.auth-demo-item {
+  appearance: none;                         /* remove browser default button style */
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--ts-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 6px;
-  width: 100%;
-  background: none;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 6px 8px;
-  font: inherit;
-  font-size: 11px;
-  color: var(--ts-text-secondary);
-  cursor: pointer;
+  gap: 10px;
   text-align: left;
-  transition: all 0.15s;
-  line-height: 1.4;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--ts-text-secondary);
+  transition: background 0.15s, border-color 0.15s;
+}
+.auth-demo-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
-.auth-demo-fill:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: var(--ts-border);
+/* Role label (LISTENER / PRODUCER) — fixed width for alignment */
+.auth-demo-role {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  min-width: 58px;
 }
 
+/* Arrow icon pushed to the right via margin-left: auto */
 .auth-demo-icon {
   margin-left: auto;
-  opacity: 0;
-  transition: opacity 0.15s;
-  font-size: 12px;
+  opacity: 0.4;
+  font-size: 13px;
+}
+.auth-demo-item:hover .auth-demo-icon { opacity: 0.8; }
+
+/* Role-specific accent colours distinguish account types at a glance */
+.auth-demo-role-listener { color: var(--ts-orange); }   /* orange = listener */
+.auth-demo-role-producer { color: var(--ts-teal); }     /* teal   = producer */
+
+/* Brief filled state applied by JS for 400 ms after click — confirms credentials were loaded */
+.auth-demo-item.auth-demo-filled {
+  border-color: var(--ts-orange);
+  background: rgba(255, 140, 0, 0.1);
 }
 
-.auth-demo-fill:hover .auth-demo-icon {
-  opacity: 0.6;
-}
-
-.auth-demo-filled {
-  background: var(--ts-orange-dim) !important;
-  border-color: var(--ts-orange-border) !important;
-}
-
-.auth-demo-role {
-  font-weight: 700;
-}
-
-/* Role-specific color highlights in demo account list. */
-.auth-demo-role-listener {
-  color: var(--ts-orange);
-}
-
-.auth-demo-role-producer {
-  color: var(--ts-teal);
-}
-
-/* ── Mobile responsiveness ── */
-@media (max-width: 480px) {
-  .auth-page {
-    padding: 24px 12px;
-  }
-
-  .ts-form-card {
-    padding: 28px 22px;
-    border-radius: 16px;
-  }
-
-  .auth-logo {
-    font-size: 1.6rem;
-  }
-
-  .auth-demo {
-    padding: 10px;
-  }
+/* Custom checkbox so the remember-me control matches the dark theme */
+.auth-checkbox {
+  accent-color: var(--ts-orange);
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
 }

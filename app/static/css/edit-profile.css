@@ -1,0 +1,323 @@
+/* ============================================================
+   TUNEFEED — Edit Profile Page Styles
+   Avatar upload, avatar randomization, and bio editing.
+   ============================================================ */
+
+/* ── Page wrapper ───────────────────────────────────────────
+   Constrained-width centred column; bottom padding
+   prevents content from hiding behind the nav bar.
+   ─────────────────────────────────────────────────────────── */
+.edit-profile-page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 40px 20px 80px;
+}
+
+.edit-profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.edit-profile-section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ts-text-primary);
+  margin-bottom: 18px;
+  letter-spacing: -0.01em;
+}
+
+/* ══════════════════════════════════════════════════════════
+   PROFILE PICTURE CARD
+   ══════════════════════════════════════════════════════════ */
+
+.profile-picture-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.profile-picture-preview-area {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.profile-picture-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid var(--ts-orange);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.profile-picture-preview-placeholder {
+  background: linear-gradient(135deg, var(--ts-orange-dim), rgba(255, 140, 0, 0.08));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--ts-orange);
+}
+
+/* Side-by-side upload and generate buttons (stacks to 1 column on mobile) */
+.profile-picture-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+/* Upload File Button */
+.upload-form {
+  position: relative;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.btn-upload-file {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--ts-surface-hover);
+  border: 2px dashed var(--ts-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-secondary);
+  text-align: center;
+  min-height: 80px;
+}
+
+.btn-upload-file:hover,
+.btn-upload-file.drag-over {
+  border-color: var(--ts-orange);
+  background: rgba(255, 140, 0, 0.08);
+  color: var(--ts-orange);
+}
+
+.btn-upload-file i {
+  font-size: 1.4rem;
+}
+
+.upload-hint {
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Generate Avatar Button */
+.randomize-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.btn-generate-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: linear-gradient(135deg, var(--ts-orange), var(--ts-orange-light));
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  min-height: 80px;
+}
+
+.btn-generate-avatar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(255, 140, 0, 0.3);
+}
+
+.btn-generate-avatar:active {
+  transform: translateY(0);
+}
+
+.btn-generate-avatar i {
+  font-size: 1.4rem;
+}
+
+.generate-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+  margin-top: 8px;
+}
+
+/* Info Box */
+.profile-picture-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  background: rgba(0, 180, 219, 0.08);
+  border-left: 3px solid var(--ts-teal);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--ts-text-secondary);
+  line-height: 1.5;
+}
+
+.profile-picture-info i {
+  flex-shrink: 0;
+  color: var(--ts-teal);
+  margin-top: 2px;
+}
+
+/* ══════════════════════════════════════════════════════════
+   BIO CARD
+   ══════════════════════════════════════════════════════════ */
+
+.bio-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 18px;
+  padding: 28px;
+}
+
+.bio-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.bio-textarea {
+  padding: 12px;
+  border: 1px solid var(--ts-border);
+  border-radius: 10px;
+  background: var(--ts-surface-hover);
+  color: var(--ts-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.bio-textarea:focus {
+  outline: none;
+  border-color: var(--ts-orange);
+  background: var(--ts-surface);
+}
+
+.char-count {
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  text-align: right;
+}
+
+/* Cancel and Save buttons sit side-by-side, equal-width */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--ts-border);
+  background: var(--ts-surface-hover);
+  color: var(--ts-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-cancel:hover {
+  background: rgba(255, 80, 80, 0.08);
+  border-color: rgba(255, 80, 80, 0.3);
+  color: #ff5050;
+}
+
+.btn-save {
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, var(--ts-orange), var(--ts-orange-light));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 140, 0, 0.3);
+}
+
+.btn-save:active {
+  transform: translateY(0);
+}
+
+/* ──────────────────────────────────────────────────────────
+   RESPONSIVE — Mobile adjustments
+   ────────────────────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .edit-profile-page {
+    padding: 20px 12px 60px;
+  }
+
+  .profile-picture-card,
+  .bio-card {
+    padding: 20px;
+  }
+
+  .profile-picture-preview {
+    width: 120px;
+    height: 120px;
+  }
+
+  .profile-picture-options {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .btn-cancel,
+  .btn-save {
+    width: 100%;
+  }
+}

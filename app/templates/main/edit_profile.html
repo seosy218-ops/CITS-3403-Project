@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile — TuneFeed{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/edit-profile.css') }}" />
+{% endblock %}
+
+{% block full_page %}
+<div class="edit-profile-page">
+  <div class="edit-profile-container">
+    
+    {# ══════════════════════════════════════════════════════════
+       PROFILE PICTURE SECTION — Image upload with options
+       ══════════════════════════════════════════════════════════ #}
+    <div class="profile-picture-card">
+      <h2 class="edit-profile-section-title">Profile Picture</h2>
+      
+      <div class="profile-picture-preview-area">
+        {% if current_user.avatar_url %}
+          <img
+            src="{{ current_user.avatar_url }}"
+            alt="{{ current_user.username }}"
+            class="profile-picture-preview"
+            id="profilePicturePreview"
+          />
+        {% else %}
+          <div class="profile-picture-preview profile-picture-preview-placeholder" id="profilePicturePreview">
+            {{ current_user.username[0].upper() }}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="profile-picture-options">
+        
+        {# Upload from files #}
+        <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="action" value="upload_picture" />
+          <input 
+            type="file" 
+            name="profile_picture" 
+            id="profilePictureInput" 
+            accept="image/png,image/jpeg,image/gif,image/webp" 
+            class="file-input-hidden"
+          />
+          <label for="profilePictureInput" class="btn-upload-file">
+            <i class="bi bi-cloud-arrow-up"></i> Upload Photo
+          </label>
+          <p class="upload-hint">PNG, JPG, GIF, WebP • Max 5 MB</p>
+        </form>
+
+        {# Generate avataaars #}
+        <form method="POST" class="randomize-form" id="randomizeForm">
+          {{ form.hidden_tag() }}
+          <input type="hidden" name="action" value="randomize_avatar" />
+          <button type="submit" class="btn-generate-avatar">
+            <i class="bi bi-arrow-repeat"></i> Generate Avatar
+          </button>
+          <p class="generate-hint">Create a new random avatar</p>
+        </form>
+      </div>
+
+      <div class="profile-picture-info">
+        <i class="bi bi-info-circle"></i>
+        <span>Your profile picture should be a square image. It will be displayed as a circle across the app.</span>
+      </div>
+    </div>
+
+    {# ══════════════════════════════════════════════════════════
+       BIO SECTION — Edit bio and basic info
+       ══════════════════════════════════════════════════════════ #}
+    <div class="bio-card">
+      <h2 class="edit-profile-section-title">About You</h2>
+
+      <form method="POST" class="bio-form">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+          <label class="form-label" for="bio">Bio</label>
+          <textarea 
+            id="bio" 
+            name="bio" 
+            class="bio-textarea" 
+            maxlength="300" 
+            placeholder="Tell listeners about your sound, your vibe, your influences..."
+          >{{ form.bio.data or '' }}</textarea>
+          <div class="char-count">
+            <span id="charCount">0</span> / 300
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a href="{{ url_for('main.profile', user_id=current_user.id) }}" class="btn-cancel">Cancel</a>
+          <button type="submit" class="btn-save">Save Bio</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/edit-profile.js') }}"></script>
+{% endblock %}
