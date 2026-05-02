@@ -34,15 +34,22 @@
         {# value re-populates after a failed submission (e.g. username already taken) #}
         <input id="username" name="username" type="text" class="ts-input"
                placeholder="producername" value="{{ form.username.data or '' }}"
-               required minlength="3" maxlength="64" aria-describedby="username-feedback" />
-        <div class="invalid-feedback" id="username-feedback">Please enter a username (3–64 characters).</div>
+               required minlength="3" maxlength="32"
+               pattern="^[A-Za-z][A-Za-z0-9_.]*$"
+               autocomplete="username" autocapitalize="none" spellcheck="false"
+               aria-describedby="username-feedback" />
+        <div class="invalid-feedback" id="username-feedback">
+          Username must be 3–32 characters and start with a letter (letters, digits, _ or . only).
+        </div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="email">Email</label>
         <input id="email" name="email" type="email" class="ts-input"
                placeholder="your@email.com" value="{{ form.email.data or '' }}"
-               required aria-describedby="email-feedback" />
+               required maxlength="120"
+               autocomplete="email" autocapitalize="none" spellcheck="false"
+               aria-describedby="email-feedback" />
         <div class="invalid-feedback" id="email-feedback">Please enter a valid email address.</div>
       </div>
 
@@ -51,21 +58,40 @@
         {# password-wrapper provides relative positioning for the absolute toggle button #}
         <div class="password-wrapper">
           <input id="password" name="password" type="password" class="ts-input"
-                 placeholder="••••••••" required minlength="6" aria-describedby="password-feedback" />
+                 placeholder="••••••••" required minlength="8" maxlength="128"
+                 autocomplete="new-password"
+                 aria-describedby="password-help password-feedback" />
           {# type="button" prevents accidental form submission when clicking the eye icon #}
           <button type="button" class="password-toggle" aria-label="Toggle password visibility">
             <i class="bi bi-eye"></i>
           </button>
         </div>
-        <div class="invalid-feedback" id="password-feedback">Password must be at least 6 characters.</div>
+        {# Live requirement checklist — JS toggles .met (green ✓) and .unmet (amber ✗) #}
+        <ul id="password-help" class="password-requirements" aria-live="polite">
+          <li class="password-requirements-title">Your password must include:</li>
+          <li data-rule="length"><i class="bi bi-circle"></i><span>At least 8 characters</span></li>
+          <li data-rule="upper"><i class="bi bi-circle"></i><span>One uppercase letter (A–Z)</span></li>
+          <li data-rule="lower"><i class="bi bi-circle"></i><span>One lowercase letter (a–z)</span></li>
+          <li data-rule="digit"><i class="bi bi-circle"></i><span>One number (0–9)</span></li>
+          <li data-rule="special"><i class="bi bi-circle"></i><span>One special character (!@#$ …)</span></li>
+        </ul>
+        <div class="invalid-feedback" id="password-feedback">
+          Password must meet every requirement listed above.
+        </div>
       </div>
 
       <div class="ts-form-group">
         <label class="form-label" for="confirm_password">Confirm Password</label>
         {# WTForms EqualTo validator checks this matches the password field server-side #}
         <input id="confirm_password" name="confirm_password" type="password" class="ts-input"
-               placeholder="••••••••" required aria-describedby="confirm-password-feedback" />
-        <div class="invalid-feedback" id="confirm-password-feedback">Please confirm your password.</div>
+               placeholder="••••••••" required minlength="8" maxlength="128"
+               autocomplete="new-password"
+               aria-describedby="confirm-password-hint confirm-password-feedback" />
+        {# Live mismatch hint — JS adds .show when values diverge #}
+        <div id="confirm-password-hint" class="password-mismatch-hint" aria-live="polite">
+          <i class="bi bi-x-circle-fill"></i><span>Passwords do not match.</span>
+        </div>
+        <div class="invalid-feedback" id="confirm-password-feedback">Passwords must match.</div>
       </div>
 
       <button type="submit" class="btn-ts-primary auth-submit-btn fw-semibold">Create Account</button>
