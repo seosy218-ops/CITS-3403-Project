@@ -12,17 +12,35 @@ class TestRegister:
         r = client.post('/register', data={
             'username': 'newuser',
             'email': 'newuser@example.com',
-            'password': 'newpass123',
-            'confirm_password': 'newpass123',
+            'password': 'NewPass123!',
+            'confirm_password': 'NewPass123!',
         }, follow_redirects=True)
         assert r.status_code == 200
+        with app.app_context():
+            from app.models import User
+            created = User.query.filter_by(email='newuser@example.com').first()
+            assert created is not None
+            assert created.username == 'newuser'
+            # Password must be hashed, not stored in plaintext
+            assert created.password_hash != 'NewPass123!'
+            assert created.check_password('NewPass123!')
+
+    def test_register_rejects_weak_password(self, client):
+        r = client.post('/register', data={
+            'username': 'weakpw',
+            'email': 'weak@example.com',
+            'password': 'password',          # no uppercase, digit, or special char
+            'confirm_password': 'password',
+        }, follow_redirects=True)
+        body = r.data.lower()
+        assert b'uppercase' in body or b'special' in body or b'number' in body
 
     def test_register_duplicate_username_rejected(self, client, seeded_db):
         r = client.post('/register', data={
             'username': 'testuser',
             'email': 'other@example.com',
-            'password': 'somepass',
-            'confirm_password': 'somepass',
+            'password': 'SomePass1!',
+            'confirm_password': 'SomePass1!',
         }, follow_redirects=True)
         assert b'already' in r.data.lower()
 
@@ -30,8 +48,8 @@ class TestRegister:
         r = client.post('/register', data={
             'username': 'brandnew',
             'email': 'test@example.com',
-            'password': 'somepass',
-            'confirm_password': 'somepass',
+            'password': 'SomePass1!',
+            'confirm_password': 'SomePass1!',
         }, follow_redirects=True)
         assert b'already' in r.data.lower()
 

@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+from sqlalchemy.exc import IntegrityError
 from app.forms import SignupForm, LoginForm, UploadBeatForm, EditProfileForm
 from app.models import db, User, Beat, Like, saved_beats, follows
 from app.services.feed_service import get_feed_beats
@@ -97,19 +98,37 @@ def register():
         return redirect(url_for('main.feed'))
     form = SignupForm()
     if form.validate_on_submit():
-        if User.query.filter_by(username=form.username.data).first():
+        username = form.username.data.strip()
+        email = form.email.data.strip().lower()
+        if User.query.filter_by(username=username).first():
             flash('Username already taken.', 'danger')
             return render_template('auth/register.html', form=form)
-        if User.query.filter_by(email=form.email.data).first():
+        if User.query.filter_by(email=email).first():
             flash('Email already registered.', 'danger')
             return render_template('auth/register.html', form=form)
-        avatar_url = _random_avataaars_avatar_url()
-        user = User(username=form.username.data, email=form.email.data, avatar_url=avatar_url)
+        user = User(
+            username=username,
+            email=email,
+            avatar_url=_random_avataaars_avatar_url(),
+        )
         user.set_password(form.password.data)
         db.session.add(user)
-        db.session.commit()
+        try:
+            db.session.commit()
+        except IntegrityError:
+            # Race: another request claimed the same username/email between
+            # the lookup above and this commit. Fall back to a friendly message.
+            db.session.rollback()
+            flash('Username or email already registered.', 'danger')
+            return render_template('auth/register.html', form=form)
         flash('Account created. Welcome to TuneFeed!', 'success')
         return redirect(url_for('main.login'))
+    if form.errors:
+        # Surface server-side validation errors (password rules, username pattern, etc.)
+        # so the user sees why submission was rejected when JS validation is bypassed.
+        for field_name, errors in form.errors.items():
+            for error in errors:
+                flash(error, 'danger')
     return render_template('auth/register.html', form=form)
 
 

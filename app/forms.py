@@ -1,19 +1,49 @@
 """WTForms definitions for auth, profile, search, and beat upload flows."""
 
+import re
+
 from flask_wtf import FlaskForm
 from wtforms import BooleanField, FloatField, IntegerField, StringField, PasswordField, SubmitField, SelectField, TextAreaField
-from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
+from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional, Regexp, ValidationError
+
+
+# Mainstream password rules: 8–128 chars, mixed case, digit, special char.
+PASSWORD_SPECIAL_CHARS = r"!@#$%^&*()\-_=+\[\]{};:'\",.<>/?\\|`~"
+_PASSWORD_SPECIAL_RE = re.compile(f'[{PASSWORD_SPECIAL_CHARS}]')
 
 
 class SignupForm(FlaskForm):
     """Registration form for new accounts."""
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
+    username = StringField('Username', validators=[
+        DataRequired(),
+        Length(min=3, max=32, message='Username must be 3–32 characters.'),
+        Regexp(
+            r'^[A-Za-z][A-Za-z0-9_.]*$',
+            message='Username must start with a letter and contain only letters, digits, underscores, or dots.',
+        ),
+    ])
     email    = StringField('Email',    validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    password = PasswordField('Password', validators=[
+        DataRequired(),
+        Length(min=8, max=128, message='Password must be 8–128 characters.'),
+    ])
     confirm_password = PasswordField('Confirm Password', validators=[
-        DataRequired(), EqualTo('password', message='Passwords must match')
+        DataRequired(), EqualTo('password', message='Passwords must match.')
     ])
     submit = SubmitField('Create Account')
+
+    def validate_password(self, field):
+        pw = field.data or ''
+        if not re.search(r'[A-Z]', pw):
+            raise ValidationError('Password must contain at least one uppercase letter.')
+        if not re.search(r'[a-z]', pw):
+            raise ValidationError('Password must contain at least one lowercase letter.')
+        if not re.search(r'\d', pw):
+            raise ValidationError('Password must contain at least one number.')
+        if not _PASSWORD_SPECIAL_RE.search(pw):
+            raise ValidationError('Password must contain at least one special character (e.g. !@#$%).')
+        if re.search(r'\s', pw):
+            raise ValidationError('Password must not contain spaces.')
 
 
 class LoginForm(FlaskForm):

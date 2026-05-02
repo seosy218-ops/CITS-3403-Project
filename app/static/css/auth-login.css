@@ -248,3 +248,70 @@
   border-color: rgba(245, 158, 11, 0.45);
   box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
 }
+
+/* ── Password requirement checklist ─────────────────────────
+   Live indicator shown under the register-page password field.
+   Each rule turns green and switches to a filled check icon
+   once it's satisfied (toggled by .met from auth-login.js).
+   ─────────────────────────────────────────────────────────── */
+.password-requirements {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid var(--ts-border);
+  border-radius: 8px;
+  font-size: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+}
+.password-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ts-text-muted);
+  transition: color 0.15s;
+}
+.password-requirements li i {
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ts-text-muted);
+  transition: color 0.15s;
+}
+.password-requirements li.met,
+.password-requirements li.met i {
+  color: var(--ts-teal, #00d4aa);
+}
+/* Active rejection: user has typed but this rule isn't satisfied yet */
+.password-requirements li.unmet,
+.password-requirements li.unmet i {
+  color: var(--ts-orange-light, #fbbf24);
+}
+
+/* Optional header row inside the requirements list */
+.password-requirements-title {
+  grid-column: 1 / -1;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ts-text-muted);
+  margin: 0 0 4px;
+}
+
+/* Inline confirm-password mismatch hint — shown only when JS adds .show */
+.password-mismatch-hint {
+  display: none;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ts-orange-light, #fbbf24);
+}
+.password-mismatch-hint.show { display: flex; align-items: center; gap: 6px; }
+.password-mismatch-hint i { font-size: 12px; }
+
+/* Single-column layout on narrow viewports */
+@media (max-width: 380px) {
+  .password-requirements { grid-template-columns: 1fr; }
+}
