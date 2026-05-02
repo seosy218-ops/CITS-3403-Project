@@ -208,3 +208,43 @@
   height: 14px;
   cursor: pointer;
 }
+
+/* ── Inline validation feedback ─────────────────────────────
+   Bootstrap's default red (#dc3545) and inherited typography
+   look out of place on the dark theme. Re-style with the
+   project's amber warning palette and tighter type so empty-
+   submit hints feel intentional rather than browser-default.
+   ─────────────────────────────────────────────────────────── */
+.auth-page .invalid-feedback {
+  color: var(--ts-orange-light);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+  margin-top: 6px;
+  padding-left: 2px;
+}
+.auth-page .invalid-feedback::before {
+  content: "\F33A";                    /* bi-exclamation-circle-fill */
+  font-family: "bootstrap-icons";
+  font-weight: normal;
+  font-size: 11px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+/* Bootstrap's `:invalid ~ .invalid-feedback` selector can't see
+   the password input because it's nested inside .password-wrapper.
+   Use :has() to detect an invalid input within the wrapper and
+   show the adjacent feedback element. */
+.auth-page .was-validated .password-wrapper:has(.ts-input:invalid) ~ .invalid-feedback {
+  display: block;
+}
+
+/* Tint the input border to match the feedback colour so the
+   field and its message read as one cohesive signal. */
+.auth-page .was-validated .ts-input:invalid,
+.auth-page .was-validated .password-wrapper:has(.ts-input:invalid) > .ts-input {
+  border-color: rgba(245, 158, 11, 0.45);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.10);
+}
