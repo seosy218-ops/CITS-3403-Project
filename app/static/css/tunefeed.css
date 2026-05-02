@@ -152,6 +152,16 @@ body {
   position: relative;
 }
 
+.nav-profile-dropdown::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 14px;
+  pointer-events: auto;
+}
+
 .nav-profile-btn {
   display: inline-flex;
   align-items: center;
@@ -283,8 +293,15 @@ body {
 }
 
 @media (min-width: 992px) {
-  .nav-profile-dropdown:hover .dropdown-menu {
+  .nav-profile-dropdown:hover .dropdown-menu,
+  .nav-profile-dropdown:focus-within .dropdown-menu {
     display: block;
+    animation: navProfileMenuFade 0.16s ease-out;
+  }
+
+  @keyframes navProfileMenuFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 }
 
