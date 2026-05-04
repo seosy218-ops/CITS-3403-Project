@@ -69,7 +69,7 @@ def _save_user_upload(file, user_id):
 
 @main.route('/')
 def index():
-    return redirect(url_for('main.discover'))
+    return redirect(url_for('main.feed'))
 
 
 @main.route('/login', methods=['GET', 'POST'])
