@@ -2,39 +2,235 @@
 
 {% block title %}Upload Beat — TuneFeed{% endblock %}
 
-{% block content %}
-<div class="container py-5" style="max-width:600px">
-  <h1 class="mb-4">Upload a Beat</h1>
-  <form method="POST" enctype="multipart/form-data" novalidate>
-    {{ form.hidden_tag() }}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/upload.css') }}" />
+{% endblock %}
 
-    <div class="mb-3">
-      {{ form.title.label(class="form-label") }}
-      {{ form.title(class="form-control", placeholder="Beat title") }}
-    </div>
+{% block full_page %}
+<div class="upload-page">
+  <div class="upload-container">
 
-    <div class="row g-3 mb-3">
-      <div class="col">
-        {{ form.genre.label(class="form-label") }}
-        {{ form.genre(class="form-control", placeholder="e.g. Trap") }}
+    {# ──────────────────────────────────────────────────────────
+       Page header — producer chip on the right mirrors the
+       nav-profile-btn aesthetic for visual continuity.
+       ────────────────────────────────────────────────────────── #}
+    <header class="upload-header">
+      <div class="upload-header-text">
+        <span class="upload-eyebrow">Producer Studio</span>
+        <h1 class="upload-title">Upload a beat</h1>
+        <p class="upload-subtitle">Drop your track, set your tiers, and ship it to the feed.</p>
       </div>
-      <div class="col">
-        {{ form.bpm.label(class="form-label") }}
-        {{ form.bpm(class="form-control", placeholder="140") }}
+
+      <div class="upload-producer-chip" aria-label="Uploading as {{ current_user.username }}">
+        <span class="upload-producer-avatar">
+          {% if current_user.avatar_url %}
+            <img src="{{ current_user.avatar_url }}" alt="{{ current_user.username }}" />
+          {% else %}
+            {{ current_user.username[0].upper() }}
+          {% endif %}
+        </span>
+        <span class="upload-producer-meta">
+          <span class="upload-producer-name">@{{ current_user.username }}</span>
+          <span class="upload-producer-role">
+            <i class="bi bi-mic-fill"></i> Producer
+          </span>
+        </span>
       </div>
-    </div>
+    </header>
 
-    <div class="mb-3">
-      {{ form.audio_url.label(class="form-label") }}
-      {{ form.audio_url(class="form-control", placeholder="https://…") }}
-    </div>
+    {% if form.errors %}
+      <div class="upload-error-card" role="alert">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+          <strong>Couldn't publish that yet.</strong>
+          <ul>
+            {% for field_name, errs in form.errors.items() %}
+              {% for err in errs %}<li>{{ form[field_name].label.text }}: {{ err }}</li>{% endfor %}
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    {% endif %}
 
-    <div class="mb-3">
-      {{ form.price.label(class="form-label") }}
-      {{ form.price(class="form-control", placeholder="0 for free") }}
-    </div>
+    <form method="POST" enctype="multipart/form-data" novalidate class="upload-form" id="upload-form">
+      {{ form.hidden_tag() }}
 
-    <button type="submit" class="btn-ts-primary w-100">Upload Beat</button>
-  </form>
+      {# ──────────────────────────────────────────────────────────
+         Section 1 — Track info
+         ────────────────────────────────────────────────────────── #}
+      <section class="upload-card">
+        <div class="upload-card-head">
+          <span class="upload-step">01</span>
+          <div>
+            <h2 class="upload-section-title">Track info</h2>
+            <p class="upload-section-sub">Tell listeners what they're about to hear.</p>
+          </div>
+        </div>
+
+        <div class="upload-grid upload-grid-1">
+          <div class="upload-field">
+            <label class="upload-label" for="title">Title <span class="upload-required">*</span></label>
+            {{ form.title(id="title", class="ts-input upload-input", placeholder="e.g. Midnight Highway", maxlength=128, required=True, autocomplete="off") }}
+            <span class="upload-hint">Up to 128 characters.</span>
+          </div>
+        </div>
+
+        <div class="upload-grid upload-grid-3">
+          <div class="upload-field">
+            <label class="upload-label" for="genre">Genre</label>
+            {{ form.genre(id="genre", class="ts-input upload-input", placeholder="Trap, Drill, Lo-Fi…", maxlength=64, autocomplete="off") }}
+          </div>
+          <div class="upload-field">
+            <label class="upload-label" for="bpm">BPM</label>
+            {{ form.bpm(id="bpm", class="ts-input upload-input", placeholder="140", min=1, max=300) }}
+          </div>
+          <div class="upload-field">
+            <label class="upload-label" for="key">Key</label>
+            {{ form.key(id="key", class="ts-input upload-input", placeholder="C# minor", maxlength=16, autocomplete="off") }}
+          </div>
+        </div>
+
+        <div class="upload-grid upload-grid-1">
+          <div class="upload-field">
+            <label class="upload-label" for="mood_tag">Mood</label>
+            {{ form.mood_tag(id="mood_tag", class="ts-input upload-input", placeholder="Dark, Energetic, Reflective…", maxlength=64, autocomplete="off") }}
+            {# Click-to-fill chips — JS writes the chosen value into #mood_tag #}
+            <div class="upload-chip-row" data-target="mood_tag">
+              <button type="button" class="upload-chip" data-value="Energetic">Energetic</button>
+              <button type="button" class="upload-chip" data-value="Dark">Dark</button>
+              <button type="button" class="upload-chip" data-value="Chill">Chill</button>
+              <button type="button" class="upload-chip" data-value="Hype">Hype</button>
+              <button type="button" class="upload-chip" data-value="Sad">Sad</button>
+              <button type="button" class="upload-chip" data-value="Romantic">Romantic</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# ──────────────────────────────────────────────────────────
+         Section 2 — Audio + cover URLs with live preview
+         ────────────────────────────────────────────────────────── #}
+      <section class="upload-card">
+        <div class="upload-card-head">
+          <span class="upload-step">02</span>
+          <div>
+            <h2 class="upload-section-title">Audio &amp; cover</h2>
+            <p class="upload-section-sub">Paste hosted URLs to your audio file and cover artwork.</p>
+          </div>
+        </div>
+
+        <div class="upload-media-grid">
+          <div class="upload-media-fields">
+            <div class="upload-field">
+              <label class="upload-label" for="audio_url">Audio URL <span class="upload-required">*</span></label>
+              {{ form.audio_url(id="audio_url", class="ts-input upload-input", placeholder="https://cdn.example.com/track.mp3", maxlength=256, required=True, autocomplete="off") }}
+              <span class="upload-hint">Direct link to MP3, WAV, or stream.</span>
+
+              <div class="upload-audio-preview" id="audio-preview" hidden>
+                <div class="upload-audio-preview-head">
+                  <i class="bi bi-soundwave"></i>
+                  <span>Audio preview</span>
+                </div>
+                <audio controls preload="metadata" id="audio-preview-player"></audio>
+              </div>
+            </div>
+
+            <div class="upload-field">
+              <label class="upload-label" for="cover_url">Cover image URL</label>
+              {{ form.cover_url(id="cover_url", class="ts-input upload-input", placeholder="https://cdn.example.com/cover.jpg", maxlength=256, autocomplete="off") }}
+              <span class="upload-hint">Square images work best. Optional.</span>
+            </div>
+          </div>
+
+          <div class="upload-cover-preview" aria-live="polite">
+            <div class="upload-cover-frame" id="cover-frame">
+              <img id="cover-preview-img" alt="Cover preview" hidden />
+              <div class="upload-cover-empty" id="cover-empty">
+                <i class="bi bi-image"></i>
+                <span>Cover preview</span>
+              </div>
+            </div>
+            <div class="upload-cover-meta">
+              <strong>Cover preview</strong>
+              <span>Updates as you paste a URL.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {# ──────────────────────────────────────────────────────────
+         Section 3 — Licence + tiered pricing
+         ────────────────────────────────────────────────────────── #}
+      <section class="upload-card">
+        <div class="upload-card-head">
+          <span class="upload-step">03</span>
+          <div>
+            <h2 class="upload-section-title">Licence &amp; pricing</h2>
+            <p class="upload-section-sub">Choose how listeners buy this beat. Set the basic price to 0 to release for free.</p>
+          </div>
+        </div>
+
+        <div class="upload-grid upload-grid-1">
+          <div class="upload-field">
+            <label class="upload-label" for="licence_type">Default licence</label>
+            {{ form.licence_type(id="licence_type", class="ts-input upload-input") }}
+          </div>
+        </div>
+
+        <div class="upload-pricing-grid">
+          <div class="upload-tier upload-tier-basic">
+            <div class="upload-tier-head">
+              <span class="upload-tier-tag">Basic lease</span>
+              <span class="upload-tier-cap">MP3 · non-exclusive</span>
+            </div>
+            <label class="upload-tier-label" for="price">Price (USD) <span class="upload-required">*</span></label>
+            <div class="upload-price-wrap">
+              <span class="upload-price-currency">$</span>
+              {{ form.price(id="price", class="upload-price-input", min=0, step="0.01", placeholder="0", required=True) }}
+            </div>
+            <span class="upload-hint">Leave at 0 to release for free.</span>
+          </div>
+
+          <div class="upload-tier upload-tier-premium">
+            <div class="upload-tier-head">
+              <span class="upload-tier-tag">Premium</span>
+              <span class="upload-tier-cap">WAV · trackouts</span>
+            </div>
+            <label class="upload-tier-label" for="premium_price">Price (USD)</label>
+            <div class="upload-price-wrap">
+              <span class="upload-price-currency">$</span>
+              {{ form.premium_price(id="premium_price", class="upload-price-input", min=0, step="0.01", placeholder="—") }}
+            </div>
+            <span class="upload-hint">Optional — skip for lease-only beats.</span>
+          </div>
+
+          <div class="upload-tier upload-tier-exclusive">
+            <div class="upload-tier-head">
+              <span class="upload-tier-tag">Exclusive</span>
+              <span class="upload-tier-cap">Full rights buyout</span>
+            </div>
+            <label class="upload-tier-label" for="exclusive_price">Price (USD)</label>
+            <div class="upload-price-wrap">
+              <span class="upload-price-currency">$</span>
+              {{ form.exclusive_price(id="exclusive_price", class="upload-price-input", min=0, step="0.01", placeholder="—") }}
+            </div>
+            <span class="upload-hint">Sells the beat exclusively. Optional.</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="upload-actions">
+        <a href="{{ url_for('main.profile', user_id=current_user.id) }}" class="upload-cancel">Cancel</a>
+        <button type="submit" class="upload-submit">
+          <i class="bi bi-cloud-arrow-up-fill"></i>
+          Publish beat
+        </button>
+      </div>
+    </form>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/upload.js') }}"></script>
 {% endblock %}

@@ -238,6 +238,10 @@ def upload():
             producer_id=current_user.id,
         )
         db.session.add(beat)
+        # Promote the user to 'producer' the first time they upload, so the
+        # role accurately reflects their activity on the platform.
+        if current_user.role != 'producer':
+            current_user.role = 'producer'
         db.session.commit()
         flash('Beat uploaded successfully!', 'success')
         return redirect(url_for('main.feed'))
