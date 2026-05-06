@@ -69,7 +69,7 @@ def _save_user_upload(file, user_id):
 
 @main.route('/')
 def index():
-    return redirect(url_for('main.discover'))
+    return redirect(url_for('main.feed'))
 
 
 @main.route('/login', methods=['GET', 'POST'])
@@ -238,6 +238,10 @@ def upload():
             producer_id=current_user.id,
         )
         db.session.add(beat)
+        # Promote the user to 'producer' the first time they upload, so the
+        # role accurately reflects their activity on the platform.
+        if current_user.role != 'producer':
+            current_user.role = 'producer'
         db.session.commit()
         flash('Beat uploaded successfully!', 'success')
         return redirect(url_for('main.feed'))
