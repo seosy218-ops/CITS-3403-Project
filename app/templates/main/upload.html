@@ -77,8 +77,28 @@
 
         <div class="upload-grid upload-grid-3">
           <div class="upload-field">
-            <label class="upload-label" for="genre">Genre</label>
-            {{ form.genre(id="genre", class="ts-input upload-input", placeholder="Trap, Drill, Lo-Fi…", maxlength=64, autocomplete="off") }}
+            <label class="upload-label" for="genre-input">Genre</label>
+            {# Hidden input carries the value — the combobox text input is cosmetic #}
+            <input type="hidden" name="genre" id="genre" value="{{ form.genre.data or '' }}" />
+            <div class="genre-combo" id="genre-combo">
+              <div class="genre-combo-trigger">
+                <i class="bi bi-music-note-list genre-combo-icon" aria-hidden="true"></i>
+                <input type="text" class="genre-combo-input" id="genre-input"
+                       placeholder="Search or add a genre…"
+                       autocomplete="off" spellcheck="false"
+                       role="combobox" aria-expanded="false"
+                       aria-controls="genre-dropdown" aria-autocomplete="list"
+                       value="{{ form.genre.data or '' }}" />
+                <button type="button" class="genre-combo-clear" id="genre-clear"
+                        aria-label="Clear genre"
+                        {% if not form.genre.data %}hidden{% endif %}>
+                  <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+                <i class="bi bi-chevron-down genre-combo-chevron" aria-hidden="true"></i>
+              </div>
+              <ul class="genre-dropdown" id="genre-dropdown"
+                  role="listbox" aria-label="Genre options" hidden></ul>
+            </div>
           </div>
           <div class="upload-field">
             <label class="upload-label" for="bpm">BPM</label>
@@ -92,9 +112,15 @@
 
         <div class="upload-grid upload-grid-1">
           <div class="upload-field">
-            <label class="upload-label" for="mood_tag">Mood</label>
-            {{ form.mood_tag(id="mood_tag", class="ts-input upload-input", placeholder="Dark, Energetic, Reflective…", maxlength=64, autocomplete="off") }}
-            {# Click-to-fill chips — JS writes the chosen value into #mood_tag #}
+            <label class="upload-label">Tags</label>
+            {# Hidden input stores the comma-separated tag string submitted to the server #}
+            <input type="hidden" name="mood_tag" id="mood_tag" value="{{ form.mood_tag.data or '' }}" />
+            <div class="upload-tags-box" id="tags-box" tabindex="0" role="group" aria-label="Tags input">
+              <input type="text" class="upload-tags-type" id="tags-type"
+                     placeholder="Add a tag…" autocomplete="off"
+                     maxlength="32" aria-label="Type a tag and press Enter" />
+            </div>
+            <span class="upload-hint">Press Enter or comma to add · click × to remove · up to 5 tags.</span>
             <div class="upload-chip-row" data-target="mood_tag">
               <button type="button" class="upload-chip" data-value="Energetic">Energetic</button>
               <button type="button" class="upload-chip" data-value="Dark">Dark</button>
@@ -102,6 +128,8 @@
               <button type="button" class="upload-chip" data-value="Hype">Hype</button>
               <button type="button" class="upload-chip" data-value="Sad">Sad</button>
               <button type="button" class="upload-chip" data-value="Romantic">Romantic</button>
+              <button type="button" class="upload-chip" data-value="Aggressive">Aggressive</button>
+              <button type="button" class="upload-chip" data-value="Motivational">Motivational</button>
             </div>
           </div>
         </div>
