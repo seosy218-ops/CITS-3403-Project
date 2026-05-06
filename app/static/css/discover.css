@@ -242,6 +242,8 @@
   font-weight: 600;
   color: var(--ts-text-primary);
   margin-bottom: 3px;
+  padding-left: 7px;
+  padding-bottom: 2px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -250,7 +252,9 @@
 .beat-card-producer {
   font-size: 12px;
   color: var(--ts-text-secondary);
-  margin-bottom: 8px;
+  margin-top: 3px;
+  margin-bottom: 4px;
+  margin-left: 7px;
   text-decoration: none;
 }
 .beat-card-producer:hover { color: var(--ts-orange-light); }
@@ -260,6 +264,7 @@
   gap: 10px;
   font-size: 11px;
   color: var(--ts-text-muted);
+  padding-left: 3px;
   margin-top: auto;
 }
 
