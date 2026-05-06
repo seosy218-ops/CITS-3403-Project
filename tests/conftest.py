@@ -9,6 +9,7 @@ class TestConfig:
     WTF_CSRF_ENABLED = False
     SECRET_KEY = 'test-secret'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    RATELIMIT_ENABLED = False
 
 
 @pytest.fixture(scope='session')
