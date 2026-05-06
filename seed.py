@@ -258,7 +258,6 @@ def seed():
                 "https://raw.githubusercontent.com/mdn/webaudio-examples/main/audio-buffer-source-node/loop/rnb-lofi-melody-loop.wav",
             ]
             audio_url = CORS_AUDIO[BEATS.index(row) % len(CORS_AUDIO)]
-            cover_url = f"https://api.dicebear.com/9.x/shapes/svg?seed={title.replace(' ', '')}"
             # Keep baseline play counts low so scroll-triggered increments are visible in demos.
             seeded_plays = random.randint(8, 18)
 
@@ -278,7 +277,6 @@ def seed():
                 uploaded_at=uploaded,
                 producer_id=producer_objs[prod_idx].id,
                 audio_url=audio_url,
-                cover_url=cover_url,
             )
             db.session.add(beat)
             beat_map[title] = beat

@@ -46,6 +46,45 @@
   margin-bottom: 28px;
 }
 
+/* ── In-card flash alerts ───────────────────────────────────
+   Rendered inside the form card by login.html / register.html.
+   Separate from the global .ts-flash bar so they can sit right
+   above the form fields with a dismiss button.
+   ─────────────────────────────────────────────────────────── */
+.auth-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  border: 1px solid transparent;
+  line-height: 1.4;
+}
+.auth-alert-danger  { background: rgba(217,119,6,0.1);   border-color: rgba(217,119,6,0.3);   color: var(--ts-orange-light); }
+.auth-alert-warning { background: rgba(217,119,6,0.07);  border-color: rgba(217,119,6,0.18);  color: #d97706; }
+.auth-alert-success { background: rgba(0,212,170,0.08);  border-color: rgba(0,212,170,0.25);  color: var(--ts-teal); }
+.auth-alert-info    { background: rgba(255,255,255,0.04); border-color: var(--ts-border);      color: var(--ts-text-secondary); }
+
+.auth-alert-close {
+  appearance: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+  font-family: inherit;
+}
+.auth-alert-close:hover { opacity: 1; }
+
 /* Row containing the remember-me checkbox */
 .remember-row {
   display: flex;

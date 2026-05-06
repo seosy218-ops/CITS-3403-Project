@@ -162,7 +162,7 @@
           {% if beat.genre %}<span class="feed-tag">{{ beat.genre }}</span>{% endif %}
           {% if beat.bpm %}<span class="feed-tag">{{ beat.bpm }} BPM</span>{% endif %}
           {% if beat.key %}<span class="feed-tag">{{ beat.key }}</span>{% endif %}
-          {% if beat.mood_tag %}<span class="feed-tag feed-tag-mood">{{ beat.mood_tag }}</span>{% endif %}
+          {% if beat.mood_tag %}{% for tag in beat.mood_tag.split(',') if tag.strip() %}<span class="feed-tag feed-tag-mood">{{ tag.strip() }}</span>{% endfor %}{% endif %}
         </div>
         {# 3-tier pricing panel — compact inline version on the feed card #}
         <div class="feed-pricing-panel">

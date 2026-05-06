@@ -2,19 +2,346 @@
 
 {% block title %}{{ beat.title }} — TuneFeed{% endblock %}
 
-{% block content %}
-<div class="container py-5">
-  <h1>{{ beat.title }}</h1>
-  <p class="text-muted">by @{{ beat.producer.username }}</p>
-  <p>Genre: {{ beat.genre or '—' }} &nbsp;|&nbsp; BPM: {{ beat.bpm }}</p>
-  <p>Price: {% if beat.price == 0 %}Free{% else %}${{ "%.0f"|format(beat.price) }}{% endif %}</p>
-  {% if current_user.is_authenticated %}
-    <button class="feed-rail-btn feed-like-btn {% if is_liked %}is-liked{% endif %}"
-            data-beat-id="{{ beat.id }}" aria-label="Like this beat">
-      <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
-      Like
-    </button>
-  {% endif %}
-  <a href="{{ url_for('main.feed') }}" class="btn btn-secondary ms-2">Back to Feed</a>
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/beat_detail.css') }}" />
+{% endblock %}
+
+{% block full_page %}
+<div class="beat-detail-page">
+
+  <a href="{{ url_for('main.discover') }}" class="beat-detail-back">
+    <i class="bi bi-arrow-left"></i> Back to Discover
+  </a>
+
+  {# ── Cover + info two-column grid ── #}
+  <div class="row g-4 beat-detail-grid">
+
+    {# Cover art #}
+    <div class="col-12 col-md-5 col-lg-4">
+      <div class="beat-detail-cover-wrap">
+        {% if beat.play_count > 100 %}
+          <span class="beat-detail-trending">Trending</span>
+        {% endif %}
+        {% if beat.cover_url %}
+          <img class="beat-detail-cover" src="{{ beat.cover_url }}" alt="{{ beat.title }}" />
+        {% else %}
+          <div class="beat-detail-cover-placeholder">
+            <i class="bi bi-music-note-beamed"></i>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Info panel #}
+    <div class="col-12 col-md-7 col-lg-8">
+      <div class="beat-detail-info">
+
+        {% if beat.genre %}
+          <span class="beat-detail-genre">{{ beat.genre }}</span>
+        {% endif %}
+
+        <h1 class="beat-detail-title">{{ beat.title }}</h1>
+
+        {# Producer row #}
+        <div class="beat-detail-producer">
+          {% if beat.producer %}
+            {% if beat.producer.avatar_url %}
+              <img class="beat-detail-producer-avatar"
+                   src="{{ beat.producer.avatar_url }}"
+                   alt="{{ beat.producer.username }}" />
+            {% else %}
+              <div class="beat-detail-producer-avatar beat-detail-producer-avatar-placeholder">
+                {{ beat.producer.username[0].upper() }}
+              </div>
+            {% endif %}
+            <a href="{{ url_for('main.profile', user_id=beat.producer.id) }}"
+               class="beat-detail-producer-name">
+              @{{ beat.producer.username }}
+            </a>
+          {% endif %}
+        </div>
+
+        {# Stats row #}
+        <div class="beat-detail-stats">
+          <span class="beat-detail-stat">
+            <i class="bi bi-play-fill"></i> {{ beat.play_count | format_num }} plays
+          </span>
+          <span class="beat-detail-stat">
+            <i class="bi bi-heart-fill"></i> {{ beat.likes_count | format_num }} likes
+          </span>
+        </div>
+
+        {# Metadata grid #}
+        <div class="beat-detail-meta-grid">
+          {% if beat.bpm %}
+            <div class="beat-meta-cell">
+              <span class="beat-meta-label">BPM</span>
+              <span class="beat-meta-value">{{ beat.bpm }}</span>
+            </div>
+          {% endif %}
+          {% if beat.key %}
+            <div class="beat-meta-cell">
+              <span class="beat-meta-label">Key</span>
+              <span class="beat-meta-value">{{ beat.key }}</span>
+            </div>
+          {% endif %}
+          {% if beat.mood_tag %}
+            <div class="beat-meta-cell beat-meta-cell-tags">
+              <span class="beat-meta-label">Tags</span>
+              <div class="beat-meta-tags">
+                {% for tag in beat.mood_tag.split(',') if tag.strip() %}
+                  <span class="beat-detail-tag">{{ tag.strip() }}</span>
+                {% endfor %}
+              </div>
+            </div>
+          {% endif %}
+          <div class="beat-meta-cell">
+            <span class="beat-meta-label">Licence</span>
+            <span class="beat-meta-value">{{ beat.licence_type or 'Basic' }}</span>
+          </div>
+        </div>
+
+        {# Audio player #}
+        {% if beat.audio_url %}
+          <div class="bd-player" id="bd-player">
+            <audio id="bd-audio" preload="metadata" src="{{ beat.audio_url }}"></audio>
+
+            <div class="bd-transport-row">
+              <button type="button" class="bd-btn" id="bd-restart" aria-label="Restart">
+                <i class="bi bi-skip-start-fill"></i>
+              </button>
+              <button type="button" class="bd-btn" id="bd-back15" aria-label="Back 15 seconds">
+                <span class="bd-skip-label">−15</span>
+              </button>
+              <button type="button" class="bd-btn primary" id="bd-play" aria-label="Play">
+                <i class="bi bi-play-fill"></i>
+              </button>
+              <button type="button" class="bd-btn" id="bd-fwd15" aria-label="Forward 15 seconds">
+                <span class="bd-skip-label">+15</span>
+              </button>
+              <button type="button" class="bd-btn" id="bd-mute" aria-label="Mute">
+                <i class="bi bi-volume-up-fill"></i>
+              </button>
+            </div>
+
+            <div class="bd-sliders">
+              <div class="bd-slider-block">
+                <div class="bd-slider-labels">
+                  <span>Seek</span>
+                  <span id="bd-time">0:00 / 0:00</span>
+                </div>
+                <input type="range" class="bd-seek" id="bd-seek"
+                       min="0" max="100" value="0" step="0.1"
+                       style="--range-pct: 0" aria-label="Seek" />
+              </div>
+              <div class="bd-slider-block">
+                <div class="bd-slider-labels">
+                  <span>Volume</span>
+                  <span id="bd-vol-label">100%</span>
+                </div>
+                <input type="range" class="bd-vol" id="bd-vol"
+                       min="0" max="100" value="100" step="1"
+                       style="--range-pct: 100" aria-label="Volume" />
+              </div>
+            </div>
+          </div>
+        {% endif %}
+
+        {# Pricing #}
+        <div class="beat-detail-pricing-section">
+          <h3>Licence &amp; Pricing</h3>
+          <div class="bd-tier-grid">
+            <div class="bd-tier bd-tier-basic">
+              <div class="bd-tier-head">
+                <span class="bd-tier-tag">Basic lease</span>
+                <span class="bd-tier-cap">MP3 · Non-exclusive</span>
+              </div>
+              <div class="bd-tier-price">
+                {% if beat.price == 0 %}Free{% else %}${{ "%.0f"|format(beat.price) }}{% endif %}
+              </div>
+            </div>
+            {% if beat.premium_price is not none and beat.premium_price > 0 %}
+              <div class="bd-tier bd-tier-premium">
+                <div class="bd-tier-head">
+                  <span class="bd-tier-tag">Premium</span>
+                  <span class="bd-tier-cap">WAV · Trackouts</span>
+                </div>
+                <div class="bd-tier-price">${{ "%.0f"|format(beat.premium_price) }}</div>
+              </div>
+            {% endif %}
+            {% if beat.exclusive_price is not none and beat.exclusive_price > 0 %}
+              <div class="bd-tier bd-tier-exclusive">
+                <div class="bd-tier-head">
+                  <span class="bd-tier-tag">Exclusive</span>
+                  <span class="bd-tier-cap">Full rights buyout</span>
+                </div>
+                <div class="bd-tier-price">${{ "%.0f"|format(beat.exclusive_price) }}</div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        {# Action buttons #}
+        <div class="beat-detail-actions">
+          {% if current_user.is_authenticated %}
+            <button class="beat-action-btn {% if is_liked %}is-liked{% endif %}"
+                    id="like-btn" data-beat-id="{{ beat.id }}">
+              <i class="bi {% if is_liked %}bi-heart-fill{% else %}bi-heart{% endif %}"></i>
+              <span id="like-count">{{ beat.likes_count | format_num }}</span>
+            </button>
+            {% if beat.producer and beat.producer != current_user %}
+              <button class="beat-action-btn {% if is_following %}is-following{% endif %}"
+                      id="follow-btn" data-producer-id="{{ beat.producer.id }}">
+                <i class="bi {% if is_following %}bi-person-check-fill{% else %}bi-person-plus{% endif %}"></i>
+                {% if is_following %}Following{% else %}Follow{% endif %}
+              </button>
+            {% endif %}
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<script>
+(function () {
+  const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  /* ── Custom audio player ──────────────────────────────── */
+  const audio     = document.getElementById('bd-audio');
+  const playBtn   = document.getElementById('bd-play');
+  const restartBtn = document.getElementById('bd-restart');
+  const back15Btn = document.getElementById('bd-back15');
+  const fwd15Btn  = document.getElementById('bd-fwd15');
+  const muteBtn   = document.getElementById('bd-mute');
+  const seekEl    = document.getElementById('bd-seek');
+  const volEl     = document.getElementById('bd-vol');
+  const timeEl    = document.getElementById('bd-time');
+  const volLabel  = document.getElementById('bd-vol-label');
+
+  function fmtTime(s) {
+    s = Math.floor(s || 0);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  function updateSeek() {
+    if (!audio || !audio.duration) return;
+    const pct = (audio.currentTime / audio.duration) * 100;
+    seekEl.value = pct;
+    seekEl.style.setProperty('--range-pct', pct);
+    timeEl.textContent = fmtTime(audio.currentTime) + ' / ' + fmtTime(audio.duration);
+  }
+
+  if (audio) {
+    audio.addEventListener('timeupdate', updateSeek);
+    audio.addEventListener('loadedmetadata', updateSeek);
+    audio.addEventListener('ended', function () {
+      playBtn.classList.remove('is-playing');
+      playBtn.querySelector('i').className = 'bi bi-play-fill';
+    });
+
+    playBtn.addEventListener('click', function () {
+      if (audio.paused) {
+        audio.play();
+        playBtn.classList.add('is-playing');
+        playBtn.querySelector('i').className = 'bi bi-pause-fill';
+      } else {
+        audio.pause();
+        playBtn.classList.remove('is-playing');
+        playBtn.querySelector('i').className = 'bi bi-play-fill';
+      }
+    });
+
+    restartBtn.addEventListener('click', function () {
+      audio.currentTime = 0;
+      if (audio.paused) {
+        audio.play();
+        playBtn.classList.add('is-playing');
+        playBtn.querySelector('i').className = 'bi bi-pause-fill';
+      }
+    });
+
+    back15Btn.addEventListener('click', function () {
+      audio.currentTime = Math.max(0, audio.currentTime - 15);
+    });
+
+    fwd15Btn.addEventListener('click', function () {
+      audio.currentTime = Math.min(audio.duration || 0, audio.currentTime + 15);
+    });
+
+    seekEl.addEventListener('input', function () {
+      const pct = parseFloat(seekEl.value);
+      seekEl.style.setProperty('--range-pct', pct);
+      if (audio.duration) audio.currentTime = (pct / 100) * audio.duration;
+    });
+
+    volEl.addEventListener('input', function () {
+      const v = parseInt(volEl.value, 10);
+      volEl.style.setProperty('--range-pct', v);
+      audio.volume = v / 100;
+      volLabel.textContent = v + '%';
+      const icon = muteBtn.querySelector('i');
+      if (v === 0) icon.className = 'bi bi-volume-mute-fill';
+      else if (v < 50) icon.className = 'bi bi-volume-down-fill';
+      else icon.className = 'bi bi-volume-up-fill';
+    });
+
+    muteBtn.addEventListener('click', function () {
+      if (audio.volume > 0) {
+        muteBtn._prevVol = audio.volume;
+        audio.volume = 0;
+        volEl.value = 0;
+        volEl.style.setProperty('--range-pct', 0);
+        volLabel.textContent = '0%';
+        muteBtn.querySelector('i').className = 'bi bi-volume-mute-fill';
+      } else {
+        const prev = (muteBtn._prevVol || 1) * 100;
+        audio.volume = muteBtn._prevVol || 1;
+        volEl.value = prev;
+        volEl.style.setProperty('--range-pct', prev);
+        volLabel.textContent = Math.round(prev) + '%';
+        muteBtn.querySelector('i').className = 'bi bi-volume-up-fill';
+      }
+    });
+  }
+
+  const likeBtn = document.getElementById('like-btn');
+  if (likeBtn) {
+    likeBtn.addEventListener('click', function () {
+      const beatId = likeBtn.dataset.beatId;
+      fetch(`/api/beats/${beatId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      })
+        .then(r => r.json())
+        .then(data => {
+          likeBtn.classList.toggle('is-liked', data.liked);
+          likeBtn.querySelector('i').className = data.liked ? 'bi bi-heart-fill' : 'bi bi-heart';
+          document.getElementById('like-count').textContent = data.likes_count;
+        });
+    });
+  }
+
+  const followBtn = document.getElementById('follow-btn');
+  if (followBtn) {
+    followBtn.addEventListener('click', function () {
+      const producerId = followBtn.dataset.producerId;
+      fetch(`/api/producers/${producerId}/follow`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      })
+        .then(r => r.json())
+        .then(data => {
+          followBtn.classList.toggle('is-following', data.following);
+          followBtn.querySelector('i').className = data.following
+            ? 'bi bi-person-check-fill' : 'bi bi-person-plus';
+          followBtn.childNodes[followBtn.childNodes.length - 1].textContent =
+            data.following ? ' Following' : ' Follow';
+        });
+    });
+  }
+})();
+</script>
 {% endblock %}

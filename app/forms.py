@@ -60,7 +60,7 @@ class UploadBeatForm(FlaskForm):
     genre        = StringField('Genre',       validators=[Optional(), Length(max=64)])
     bpm          = IntegerField('BPM',        validators=[Optional(), NumberRange(min=1, max=300)])
     key          = StringField('Key',         validators=[Optional(), Length(max=16)])
-    mood_tag     = StringField('Mood Tag',    validators=[Optional(), Length(max=64)])
+    mood_tag     = StringField('Mood Tag',    validators=[Optional(), Length(max=128)])
     licence_type = SelectField('Licence Type',
         choices=[('Non-exclusive', 'Non-exclusive'), ('Premium Lease', 'Premium Lease'), ('Exclusive', 'Exclusive')]
     )
