@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy.exc import IntegrityError
+from app import limiter
 from app.forms import SignupForm, LoginForm, UploadBeatForm, EditProfileForm
 from app.models import db, User, Beat, Like, saved_beats, follows
 from app.services.feed_service import get_feed_beats
@@ -73,6 +74,7 @@ def index():
 
 
 @main.route('/login', methods=['GET', 'POST'])
+@limiter.limit('20 per minute')
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.feed'))
@@ -93,6 +95,7 @@ def login():
 
 
 @main.route('/register', methods=['GET', 'POST'])
+@limiter.limit('10 per hour')
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.feed'))
