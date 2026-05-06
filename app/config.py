@@ -1,14 +1,30 @@
 import os
+import secrets as _secrets
+
+
+def _require_secret_key():
+    key = os.environ.get('SECRET_KEY')
+    if key:
+        return key
+    if os.environ.get('FLASK_DEBUG', 'false').lower() == 'true':
+        # Ephemeral key for local dev — sessions reset on every restart, which is fine
+        return _secrets.token_hex(32)
+    raise ValueError(
+        'SECRET_KEY environment variable must be set in production. '
+        'Generate one with: python -c "import secrets; print(secrets.token_hex(32))"'
+    )
+
 
 class Config:
-    # Fall back to a hard-coded dev secret; MUST be overridden via env var in production
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'tunefeed-dev-2025-change-in-prod')
+    SECRET_KEY = _require_secret_key()
 
-    # SQLite for development; swap DATABASE_URL for Postgres/MySQL in production
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///tunefeed.db')
-
-    # Disable SQLAlchemy event system overhead — not needed unless using signals
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_TIME_LIMIT = 3600  # CSRF tokens expire after 1 hour
+    WTF_CSRF_TIME_LIMIT = 3600
+
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    # Only send the cookie over HTTPS; disabled in local dev (FLASK_DEBUG=true) where there is no TLS
+    SESSION_COOKIE_SECURE = os.environ.get('FLASK_DEBUG', 'false').lower() != 'true'

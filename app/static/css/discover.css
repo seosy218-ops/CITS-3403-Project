@@ -1,0 +1,360 @@
+/* ============================================================
+   TUNEFEED — Discover Page Styles
+   Portal hero, genre filter pills, beat/producer cards.
+   ============================================================ */
+
+/* ── Portal hero section ────────────────────────────────────
+   Full-viewport-height centred block. Relative so the canvas
+   sits behind the text via z-index layering.
+   ─────────────────────────────────────────────────────────── */
+.portal-hero {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+  padding: 40px 24px;
+}
+
+/* Animated wave canvas fills the hero section behind content */
+#portal-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;       /* clicks pass through to the button */
+  z-index: 0;
+}
+
+/* Radial gradient overlay fades canvas edges into the bg */
+.portal-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 70% 60% at 50% 50%,
+    transparent 20%,
+    rgba(13, 13, 20, 0.55) 65%,
+    var(--ts-bg) 100%
+  );
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* All text and the button sit above canvas and overlay */
+.portal-content {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+/* "MAIN EXPERIENCE" small caps label */
+.portal-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ts-orange);
+  margin-bottom: 18px;
+  opacity: 0.9;
+}
+
+/* Primary heading — large gradient text */
+.portal-title {
+  font-size: clamp(3rem, 8vw, 6.5rem);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
+  /* Gradient text via background-clip trick */
+  background: linear-gradient(135deg, #eeeef8 0%, var(--ts-orange-light) 55%, #e879f9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Subtitle description */
+.portal-sub {
+  font-size: clamp(0.95rem, 2vw, 1.15rem);
+  color: var(--ts-text-secondary);
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 auto 36px;
+}
+
+/* CTA button — pill shape with animated glow ring on hover */
+.portal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 38px;
+  background: var(--ts-orange);
+  color: #fff;
+  border: none;
+  border-radius: 100px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.22s, box-shadow 0.22s, transform 0.18s;
+  box-shadow: 0 0 28px rgba(217, 119, 6, 0.4);
+}
+.portal-btn:hover {
+  background: var(--ts-orange-light);
+  box-shadow: 0 0 44px rgba(245, 158, 11, 0.6);
+  transform: translateY(-2px);
+  color: #fff;
+}
+.portal-btn i { font-size: 1.1rem; }
+
+/* Scroll-hint chevron below portal */
+.portal-scroll-hint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: var(--ts-text-muted);
+  font-size: 1.4rem;
+  animation: bounce 1.8s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(8px); }
+}
+
+/* ── Section layout ─────────────────────────────────────────
+   Shared wrapper for trending / new drops / producers.
+   ─────────────────────────────────────────────────────────── */
+.discover-section {
+  max-width: 1100px;
+  margin: 0 auto 70px;
+  padding: 0 22px;
+}
+
+.discover-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.discover-section-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ── Genre filter pills ─────────────────────────────────────
+   Horizontal scroll row of clickable genre tags.
+   overflow-x: auto + no-scrollbar keeps it tidy on mobile.
+   ─────────────────────────────────────────────────────────── */
+.genre-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+  scrollbar-width: none;
+}
+.genre-pills::-webkit-scrollbar { display: none; }
+
+.genre-pill {
+  flex-shrink: 0;
+  padding: 6px 16px;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  border: 1px solid var(--ts-border);
+  color: var(--ts-text-secondary);
+  background: transparent;
+  transition: all 0.18s;
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+.genre-pill:hover,
+.genre-pill.active {
+  background: var(--ts-orange);
+  border-color: var(--ts-orange);
+  color: #fff;
+}
+
+/* ── Beat card grid (trending + new drops) ──────────────────
+   auto-fill with a minimum of 240px keeps consistent spacing.
+   ─────────────────────────────────────────────────────────── */
+.beats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.beat-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+}
+.beat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+}
+
+/* Cover art square — fixed aspect ratio via padding trick */
+.beat-cover {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--ts-border);
+  position: relative;
+}
+
+/* Fallback gradient cover when no image */
+.beat-cover-placeholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ts-text-muted);
+  font-size: 2.5rem;
+}
+
+.beat-card-body {
+  padding: 12px 14px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.beat-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ts-text-primary);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.beat-card-producer {
+  font-size: 12px;
+  color: var(--ts-text-secondary);
+  margin-bottom: 8px;
+  text-decoration: none;
+}
+.beat-card-producer:hover { color: var(--ts-orange-light); }
+
+.beat-card-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  margin-top: auto;
+}
+
+.beat-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* Play count badge overlay on cover art */
+.beat-card-plays {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 100px;
+  backdrop-filter: blur(4px);
+}
+
+/* Genre badge on card */
+.beat-genre-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--ts-orange-dim);
+  color: var(--ts-orange);
+  margin-bottom: 4px;
+}
+
+/* ── Producer card grid ──────────────────────────────────────
+   Each card shows avatar, name, beat count, and follow link.
+   ─────────────────────────────────────────────────────────── */
+.producers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
+}
+
+.producer-card {
+  background: var(--ts-surface);
+  border: 1px solid var(--ts-border);
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  text-decoration: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.producer-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+}
+
+.producer-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--ts-orange-border);
+  background: var(--ts-border);
+}
+
+.producer-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ts-text-primary);
+}
+
+.producer-stats {
+  font-size: 11px;
+  color: var(--ts-text-muted);
+}
+
+/* Rank badge (#1, #2, #3) overlaid on the card — absolutely positioned
+   inside .producer-card-wrap which provides the relative context. */
+.producer-rank {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: var(--ts-orange);
+}
+
+/* Wrapper provides position: relative so the rank badge can be absolutely placed */
+.producer-card-wrap { position: relative; }
