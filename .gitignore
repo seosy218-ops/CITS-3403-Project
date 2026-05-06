@@ -206,6 +206,12 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+# Editor backup files
+*.bak
+*.orig
+*.swp
+*~
+
 # Claude Code / Anthropic local state — never commit
 .claude/
 .anthropic/
